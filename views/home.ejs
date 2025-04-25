@@ -1,22 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Harsha's Projects</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <header>
-        <h1 style="text-align:center; color:white; margin-top: 50px;">
-  Welcome to Harsha's Project Hub
-</h1>
-        <nav>
-            <a href="/">Home</a> |
-            <a href="/auth/login">Login</a> |
-            <a href="/auth/register">Register</a>
-        </nav>
-    </header>
-    <main>
-        <p>Explore projects in electronics, software, and more!</p>
-    </main>
-</body>
-</html>
+
+<%- include('partials/header', { ip: ip }) %>
+<div class="home-bg">
+  <h1>Welcome to Harsha’s Project Hub</h1>
+</div>
+<script>
+  const images = ["/images/bg1.jpg", "/images/bg2.jpg", "/images/bg3.jpg"];
+  let index = 0;
+  setInterval(() => {
+    document.querySelector(".home-bg").style.backgroundImage = `url(${images[index]})`;
+    index = (index + 1) % images.length;
+  }, 5 * 60 * 1000);
+</script>
+        

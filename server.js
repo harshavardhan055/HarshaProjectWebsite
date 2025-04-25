@@ -1,44 +1,26 @@
+
 const express = require('express');
-const path = require('path');
 const session = require('express-session');
-
+const path = require('path');
 const app = express();
-const PORT = 3000;
-
 const mainRoutes = require('./routes/main');
-const authRoutes = require('./routes/auth');
 
-const adminIP = "192.168.0.101";
+app.use(session({ secret: 'harsha_secret', resave: false, saveUninitialized: true }));
 
-app.use((req, res, next) => {
-  const ip = req.ip.replace("::ffff:", ""); // Clean IPv4 format
-
-  if (req.path.startsWith("/admin") || req.path.startsWith("/add") || req.path.startsWith("/edit")) {
-    if (ip !== adminIP) {
-      return res.status(403).send("⚠️ Access Denied: Admin only");
-    }
-  }
-  next();
-});
-
-
-// View engine setup
-app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-// Middleware
-app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-    secret: 'harsha_secret',
-    resave: false,
-    saveUninitialized: true
-}));
 
-// Routes
-app.use('/', mainRoutes);
-app.use('/auth', authRoutes);
-
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+// Pass IP to views for admin check
+app.use((req, res, next) => {
+    const ip = req.ip.replace("::ffff:", "");
+    res.locals.ip = ip;
+    next();
 });
+
+app.use('/', mainRoutes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
+        
