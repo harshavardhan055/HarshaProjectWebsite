@@ -21,15 +21,9 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-prod
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
 # configure the database
-database_url = os.environ.get("DATABASE_URL")
-if database_url:
-    # Check if PostgreSQL URL needs adjusting (common issue with some platforms)
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-else:
-    # Fallback to SQLite for development
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///harsha_projects.db"
+# Use SQLite for now to preview the website
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///harsha_projects.db"
+app.logger.info("Using SQLite database for preview")
 
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
