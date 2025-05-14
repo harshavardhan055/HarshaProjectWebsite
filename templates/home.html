@@ -1,119 +1,23 @@
-{% extends "base.html" %}
 
-{% block title %}Harsha Projects - Home{% endblock %}
-
-{% block content %}
-<!-- Hero Section -->
-<div class="home-hero">
-    <div class="hero-content">
-        <h1 class="hero-title">Welcome to Harsha Projects</h1>
-        <p class="hero-subtitle">Exploring Electronics & Software Development</p>
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('projects') }}" class="btn btn-primary btn-lg">View Projects</a>
-        {% else %}
-        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Login to Explore</a>
-        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg ms-2">Sign Up</a>
-        {% endif %}
-    </div>
-</div>
-
-<div class="container">
-    <!-- About Section -->
-    <section class="my-5">
-        <div class="row">
-            <div class="col-md-6">
-                <h2 class="section-title">About This Platform</h2>
-                <p>Welcome to my personal project showcase website. Here, I document and share my journey through various electronics and software development projects.</p>
-                <p>This platform serves as both a portfolio and a knowledge base, where you can explore the details of my work including:</p>
-                <ul>
-                    <li>Project descriptions and goals</li>
-                    <li>Source code samples</li>
-                    <li>Circuit diagrams and connections</li>
-                    <li>Step-by-step procedures</li>
-                    <li>Video demonstrations</li>
-                </ul>
-                <p>Whether you're here to learn, collaborate, or just explore, I hope you find something interesting!</p>
-            </div>
-            <div class="col-md-6">
-                <img src="https://images.unsplash.com/photo-1605379399642-870262d3d051" alt="Software Development" class="img-fluid rounded">
-            </div>
-        </div>
-    </section>
-
-    {% if current_user.is_authenticated and featured_projects %}
-    <!-- Featured Projects Section -->
-    <section class="my-5">
-        <h2 class="section-title mb-4">Featured Projects</h2>
-        <div class="row">
-            {% for project in featured_projects %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    {% if project.image_path %}
-                    <img src="{{ url_for('static', filename=project.image_path) }}" class="card-img-top" alt="{{ project.title }}">
-                    {% else %}
-                    <img src="https://images.unsplash.com/photo-1603694681044-e71c5993d6cd" class="card-img-top" alt="Project placeholder">
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">{{ project.title }}</h5>
-                        <p class="card-text">{{ project.description|truncate(100) }}</p>
-                    </div>
-                    <div class="card-footer bg-transparent border-0">
-                        <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-primary">View Details</a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        <div class="text-center mt-4">
-            <a href="{{ url_for('projects') }}" class="btn btn-secondary">View All Projects</a>
-        </div>
-    </section>
-    {% elif not current_user.is_authenticated %}
-    <!-- Call to Action for Non-Authenticated Users -->
-    <section class="my-5 text-center">
-        <div class="p-5 rounded" style="background-color: var(--surface-dark);">
-            <h2 class="section-title">Discover Amazing Projects</h2>
-            <p class="mb-4">Sign up or log in to access a collection of electronics and software projects with detailed documentation.</p>
-            <div>
-                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2">Sign Up</a>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Login</a>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Technology Showcase -->
-    <section class="my-5">
-        <h2 class="section-title mb-4">Technology Spectrum</h2>
-        <div class="row text-center">
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-microchip fa-3x mb-3" style="color: var(--secondary-color);"></i>
-                        <h5 class="card-title">Electronics</h5>
-                        <p class="card-text">Explore circuit designs, embedded systems, and IoT projects combining hardware and software.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-code fa-3x mb-3" style="color: var(--secondary-color);"></i>
-                        <h5 class="card-title">Software Development</h5>
-                        <p class="card-text">Discover web applications, embedded software, and programming techniques.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <i class="fas fa-flask fa-3x mb-3" style="color: var(--secondary-color);"></i>
-                        <h5 class="card-title">Testing & Research</h5>
-                        <p class="card-text">Review testing methodologies, research findings, and experimental results.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Harsha Project Website</title>
+    <style>
+        body {
+            background-color: #111;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 2em;
+        }
+        h1 {
+            color: #00ffcc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Harsha's Project Website!</h1>
+    <p>This is the homepage. Use the navigation to explore projects and testings.</p>
+</body>
+</html>
