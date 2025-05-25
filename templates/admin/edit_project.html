@@ -43,7 +43,7 @@
                         <p class="small text-muted mt-1">Current image. Upload a new one to replace it.</p>
                     </div>
                     {% endif %}
-                    {{ form.image(class="form-control", data_preview="image-preview") }}
+                  {{ form.image(class="form-control", data_preview="image-preview", accept="image/*") }}
                     <small class="form-text text-muted">Recommended size: 1200x800px (Max 5MB)</small>
                     <div class="mt-2">
                         <img id="image-preview" class="img-fluid rounded" style="max-height: 200px; display: none;">
@@ -52,7 +52,7 @@
                 
                 <div class="mb-3">
                     <label for="{{ form.code.id }}" class="form-label">Code</label>
-                    {{ form.code(class="form-control", rows=8) }}
+                   {{ form.video(class="form-control", accept="video/mp4,video/webm") }}
                 </div>
                 
                 <div class="mb-3">
@@ -80,7 +80,7 @@
                         <p class="small text-muted mt-1">Current circuit diagram. Upload a new one to replace it.</p>
                     </div>
                     {% endif %}
-                    {{ form.circuit_diagram(class="form-control", data_preview="circuit-preview") }}
+                  {{ form.circuit_diagram(class="form-control", data_preview="circuit-preview", accept="image/*") }}
                     <small class="form-text text-muted">Upload circuit diagram image (Max 5MB)</small>
                     <div class="mt-2">
                         <img id="circuit-preview" class="img-fluid rounded" style="max-height: 200px; display: none;">
