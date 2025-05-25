@@ -30,6 +30,29 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect(url_for("main_routes.home"))
 
+@main_routes.route("/register", methods=["GET", "POST"])
+def register():
+    # Implement registration logic here (form handling, validation, create user, etc.)
+    return render_template("register.html")
+
+@main_routes.route("/projects")
+@login_required
+def projects():
+    return render_template("projects.html")
+
+@main_routes.route("/testing")
+@login_required
+def testing():
+    return render_template("testing.html")
+
+@main_routes.route("/admin/dashboard")
+@login_required
+def admin_dashboard():
+    if not current_user.is_admin:
+        flash("Access denied: Admins only.", "danger")
+        return redirect(url_for("main_routes.home"))
+    return render_template("admin/dashboard.html")
+
 @main_routes.route("/profile")
 @login_required
 def profile():
