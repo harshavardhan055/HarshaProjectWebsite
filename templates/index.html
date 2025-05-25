@@ -1,29 +1,25 @@
-from flask import Flask, render_template, session
+{% extends "base.html" %}
 
-app = Flask(__name__)
+{% block content %}
+<div class="homepage-container">
+  <h1>Welcome to Harsha's Project Website</h1>
+  <p>A secure, project-driven platform showcasing electronics and software innovations.</p>
 
-@app.route('/')
-def home():
-    return render_template('index.html')  # This serves your homepage
-
-@app.route('/register')
+  {% if session.get('user_id') %}
+    <p>Hello, {{ session.get('username') }}!</p>
+    <a href="{{ url_for('projects') }}" class="btn">View Projects</a>
+    <a href="{{ url_for('testing') }}" class="btn">View Testing</a>
+    {% if session.get('is_admin') %}
+      <a href="{{ url_for('admin.dashboard') }}" class="btn">Go to Admin Panel</a>
+    {% endif %}
+  {% else %}
+    <a href="{{ url_for('login') }}" class="btn">Login</a>
+    @app.route('/register')
 def register():
     return render_template('register.html')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
+  {% endif %}
+</div>
+{% endblock %}
 
-@app.route('/projects')
-def projects():
-    return render_template('projects.html')
-
-@app.route('/testing')
-def testing():
-    return render_template('testing.html')
-
-# Admin dashboard route (must match 'admin.dashboard')
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    return render_template('admin/dashboard.html')  # Adjust if you use blueprints
 
