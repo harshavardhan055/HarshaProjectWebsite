@@ -28,14 +28,14 @@
                     </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('projects') }}">Projects</a>
+                        <a class="nav-link" href="{{ url_for('main_routes.projects') }}">Projects</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('testing') }}">Testing</a>
+                        <a class="nav-link" href="{{ url_for('main_routes.testing') }}">Testing</a>
                     </li>
                     {% if current_user.is_admin %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin</a>
+                        <a class="nav-link" href="{{ url_for('main_routes.admin_dashboard') }}">Admin</a>
                     </li>
                     {% endif %}
                     {% endif %}
@@ -55,15 +55,15 @@
                                 <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main_routes.logout') }}">Logout</a></li>
                             </ul>
                         </li>
                         {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                            <a class="nav-link" href="{{ url_for('main_routes.login') }}">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                            <a class="nav-link" href="{{ url_for('main_routes.register') }}">Register</a>
                         </li>
                         {% endif %}
                     </ul>
@@ -103,8 +103,8 @@
                     <h5>Links</h5>
                     <ul class="list-unstyled">
                         <li><a href="{{ url_for('main_routes.home') }}">Home</a></li>
-                        <li><a href="{{ url_for('projects') }}">Projects</a></li>
-                        <li><a href="{{ url_for('testing') }}">Testing</a></li>
+                        <li><a href="{{ url_for('main_routes.projects') }}">Projects</a></li>
+                        <li><a href="{{ url_for('main_routes.testing') }}">Testing</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
