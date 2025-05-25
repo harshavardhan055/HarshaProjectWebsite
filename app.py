@@ -74,3 +74,6 @@ with app.app_context():
 def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
+from routes import main_routes
+app.register_blueprint(main_routes)
+
