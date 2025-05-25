@@ -13,16 +13,15 @@ logging.basicConfig(level=logging.DEBUG)
 class Base(DeclarativeBase):
     pass
 
-
 db = SQLAlchemy(model_class=Base)
-# create the app
+
+# Create the app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///instance/app.db")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # Needed for url_for to generate with https
 
-# configure the database
-# Use SQLite for now to preview the website
+# Configure the database (override with local SQLite for preview)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///harsha_projects.db"
 app.logger.info("Using SQLite database for preview")
 
@@ -57,7 +56,7 @@ with app.app_context():
     # Create admin user if it doesn't exist
     from models import User
     from werkzeug.security import generate_password_hash
-    
+
     admin_user = User.query.filter_by(username="admin").first()
     if not admin_user:
         admin_user = User(
@@ -74,6 +73,9 @@ with app.app_context():
 def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
+
+# ✅ Register routes here
 from routes import main_routes
 app.register_blueprint(main_routes)
+
 
