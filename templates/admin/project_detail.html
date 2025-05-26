@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Project: {{ item_name }}</h2>
+
+<!-- Description -->
+{% if description_files %}
+    <h3>Description</h3>
+    <ul>
+        {% for file in description_files %}
+            <li><a href="{{ url_for('static', filename=file) }}" target="_blank">{{ file.split('/')[-1] }}</a></li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<!-- Images -->
+{% if image_files %}
+    <h3>Images</h3>
+    {% for image in image_files %}
+        <img src="{{ url_for('static', filename=image) }}" width="300" style="margin: 10px;">
+    {% endfor %}
+{% endif %}
+
+<!-- Videos -->
+{% if video_files %}
+    <h3>Videos</h3>
+    {% for video in video_files %}
+        <video width="400" controls style="margin: 10px;">
+            <source src="{{ url_for('static', filename=video) }}">
+        </video>
+    {% endfor %}
+{% endif %}
+
+<!-- Code Files -->
+{% if code_files %}
+    <h3>Code Files</h3>
+    <ul>
+        {% for code in code_files %}
+            <li><a href="{{ url_for('static', filename=code) }}" target="_blank">{{ code.split('/')[-1] }}</a></li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<!-- Circuit Diagrams -->
+{% if circuit_files %}
+    <h3>Circuit Diagrams</h3>
+    {% for circuit in circuit_files %}
+        <img src="{{ url_for('static', filename=circuit) }}" width="300" style="margin: 10px;">
+    {% endfor %}
+{% endif %}
+
+{% endblock %}
