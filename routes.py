@@ -57,6 +57,7 @@ def admin_dashboard():
 @login_required
 def profile():
     return render_template("profile.html", user=current_user)
+
 @main_routes.route("/contact")
 def contact():
     return render_template("contact.html")
