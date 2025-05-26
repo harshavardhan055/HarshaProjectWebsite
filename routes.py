@@ -1,8 +1,8 @@
 import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User
-from werkzeug.security import check_password_hash
+from models import User, db  # Ensure db is imported here
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 main_routes = Blueprint("main_routes", __name__)
@@ -39,6 +39,29 @@ def logout():
 
 @main_routes.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+
+        if not username or not password or not confirm_password:
+            flash("Please fill out all fields.", "warning")
+            return redirect(url_for("main_routes.register"))
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return redirect(url_for("main_routes.register"))
+
+        if User.query.filter_by(username=username).first():
+            flash("Username already exists.", "danger")
+            return redirect(url_for("main_routes.register"))
+
+        new_user = User(username=username, password_hash=generate_password_hash(password), is_admin=False)
+        db.session.add(new_user)
+        db.session.commit()
+        flash("Registration successful. Please log in.", "success")
+        return redirect(url_for("main_routes.login"))
+
     return render_template("register.html")
 
 @main_routes.route("/projects")
@@ -99,4 +122,5 @@ def profile():
 @main_routes.route("/contact")
 def contact():
     return render_template("contact.html")
+
 
