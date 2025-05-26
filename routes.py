@@ -39,7 +39,6 @@ def logout():
 
 @main_routes.route("/register", methods=["GET", "POST"])
 def register():
-    # Implement registration logic here (form handling, validation, create user, etc.)
     return render_template("register.html")
 
 @main_routes.route("/projects")
@@ -60,34 +59,37 @@ def admin_dashboard():
         return redirect(url_for("main_routes.home"))
     return render_template("admin/dashboard.html")
 
-@main_routes.route("/admin/upload", methods=["GET", "POST"])
+@main_routes.route("/admin/upload", methods=["POST"])
 @login_required
-def admin_upload_file():
-    # Only allow admin users to access upload
+def upload_file():
     if not current_user.is_admin:
         flash("Access denied: Admins only.", "danger")
         return redirect(url_for("main_routes.home"))
 
-    if request.method == "POST":
-        if 'file' not in request.files:
-            flash("No file part", "warning")
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            flash("No selected file", "warning")
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            file.save(os.path.join(upload_folder, filename))
-            flash("File uploaded successfully!", "success")
-            return redirect(url_for("main_routes.admin_upload_file"))
-        else:
-            flash("File type not allowed.", "danger")
-            return redirect(request.url)
+    file = request.files.get("file")
+    item_name = request.form.get("item_name", "").strip()
+    file_type = request.form.get("file_type", "").strip().lower()
+    category = request.form.get("category", "").strip().lower()  # 'projects' or 'testing'
 
-    return render_template("admin/upload.html")
+    if not file or file.filename == "":
+        flash("No file selected.", "warning")
+        return redirect(url_for("main_routes.admin_dashboard"))
+
+    if not allowed_file(file.filename):
+        flash("File type not allowed.", "danger")
+        return redirect(url_for("main_routes.admin_dashboard"))
+
+    if not item_name or not file_type or category not in ['projects', 'testing']:
+        flash("Missing required fields.", "danger")
+        return redirect(url_for("main_routes.admin_dashboard"))
+
+    filename = secure_filename(file.filename)
+    upload_path = os.path.join(current_app.root_path, "static", "uploads", category, item_name, file_type)
+    os.makedirs(upload_path, exist_ok=True)
+    file.save(os.path.join(upload_path, filename))
+
+    flash(f"{file_type.capitalize()} uploaded successfully under '{item_name}'.", "success")
+    return redirect(url_for("main_routes.admin_dashboard"))
 
 @main_routes.route("/profile")
 @login_required
@@ -97,3 +99,4 @@ def profile():
 @main_routes.route("/contact")
 def contact():
     return render_template("contact.html")
+
