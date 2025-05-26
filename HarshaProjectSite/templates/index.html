@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="homepage-container">
+  <h1>Welcome to Harsha's Project Website</h1>
+  <p>A secure, project-driven platform showcasing electronics and software innovations.</p>
+
+  {% if current_user.is_authenticated %}
+    <p>Hello, {{ current_user.username }}!</p>
+    <a href="{{ url_for('main_routes.projects') }}" class="btn">View Projects</a>
+    <a href="{{ url_for('main_routes.testing') }}" class="btn">View Testing</a>
+    {% if current_user.is_admin %}
+      <a href="{{ url_for('main_routes.admin_dashboard') }}" class="btn">Go to Admin Panel</a>
+    {% endif %}
+    <a href="{{ url_for('main_routes.logout') }}" class="btn">Logout</a>
+  {% else %}
+    <a href="{{ url_for('main_routes.login') }}" class="btn">Login</a>
+    <a href="{{ url_for('main_routes.register') }}" class="btn">Register</a>
+  {% endif %}
+</div>
+<div class="contact-info mt-5">
+  <h3>Contact Us</h3>
+  <p>Phone: +91 63014 35542</p>
+  <p>Email: <a href="mailto:mastertechnical193@gmail.com">mastertechnical193@gmail.com</a></p>
+</div>
+{% endblock %}
+
+
+

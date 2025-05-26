@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Testing - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="project-title">Testing</h1>
+            <p class="lead">Explore my testing procedures and experimental results.</p>
+        </div>
+    </div>
+    
+    {% if testing_items %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for testing in testing_items %}
+        <div class="col">
+            <div class="card h-100">
+                {% if testing.image_path %}
+                <img src="{{ url_for('static', filename=testing.image_path) }}" class="card-img-top" alt="{{ testing.title }}">
+                {% else %}
+                <img src="https://images.unsplash.com/photo-1635257600832-161522894a0c" class="card-img-top" alt="Testing placeholder">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ testing.title }}</h5>
+                    <p class="card-text">{{ testing.description|truncate(150) }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{{ url_for('main_routes.testing_detail', testing_id=testing.id) }}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-vial fa-4x mb-3" style="color: var(--secondary-color);"></i>
+        <h3>No Testing Items Available</h3>
+        <p>There are currently no testing items to display.</p>
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('main_routes.add_testing') }}" class="btn btn-primary mt-3">Add Testing Item</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
