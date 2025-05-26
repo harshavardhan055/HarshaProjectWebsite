@@ -1,35 +1,42 @@
 import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User, db  # Ensure db is imported here
+from models import User, db  # Make sure db and User are correctly imported
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 main_routes = Blueprint("main_routes", __name__)
 
+# Allowed file extensions for admin upload
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino', 'txt'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Home Page
 @main_routes.route("/")
 def home():
     return render_template("index.html")
 
+# Login Route
 @main_routes.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username").strip()
+        password = request.form.get("password").strip()
+
         user = User.query.filter_by(username=username).first()
+
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
             flash("Logged in successfully.", "success")
             return redirect(url_for("main_routes.home"))
         else:
             flash("Invalid credentials", "danger")
+
     return render_template("login.html")
 
+# Logout Route
 @main_routes.route("/logout")
 @login_required
 def logout():
@@ -37,26 +44,37 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect(url_for("main_routes.home"))
 
+# Register Route
 @main_routes.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
+        username = request.form.get("username").strip()
+        email = request.form.get("email").strip()
+        password = request.form.get("password").strip()
+        confirm_password = request.form.get("confirm_password").strip()
 
-        if not username or not password or not confirm_password:
-            flash("Please fill out all fields.", "warning")
+        # Validate form
+        if not username or not email or not password or not confirm_password:
+            flash("Please fill in all fields.", "warning")
             return redirect(url_for("main_routes.register"))
 
         if password != confirm_password:
             flash("Passwords do not match.", "danger")
             return redirect(url_for("main_routes.register"))
 
-        if User.query.filter_by(username=username).first():
-            flash("Username already exists.", "danger")
+        # Check if username or email already exists
+        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+        if existing_user:
+            flash("Username or email already exists.", "danger")
             return redirect(url_for("main_routes.register"))
 
-        new_user = User(username=username, password_hash=generate_password_hash(password), is_admin=False)
+        # Register new user
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password),
+            is_admin=False
+        )
         db.session.add(new_user)
         db.session.commit()
         flash("Registration successful. Please log in.", "success")
@@ -64,16 +82,19 @@ def register():
 
     return render_template("register.html")
 
+# Projects Page
 @main_routes.route("/projects")
 @login_required
 def projects():
     return render_template("projects.html")
 
+# Testing Page
 @main_routes.route("/testing")
 @login_required
 def testing():
     return render_template("testing.html")
 
+# Admin Dashboard Page
 @main_routes.route("/admin/dashboard")
 @login_required
 def admin_dashboard():
@@ -82,6 +103,7 @@ def admin_dashboard():
         return redirect(url_for("main_routes.home"))
     return render_template("admin/dashboard.html")
 
+# Admin Upload Handler
 @main_routes.route("/admin/upload", methods=["POST"])
 @login_required
 def upload_file():
@@ -94,6 +116,7 @@ def upload_file():
     file_type = request.form.get("file_type", "").strip().lower()
     category = request.form.get("category", "").strip().lower()  # 'projects' or 'testing'
 
+    # Validate upload inputs
     if not file or file.filename == "":
         flash("No file selected.", "warning")
         return redirect(url_for("main_routes.admin_dashboard"))
@@ -106,6 +129,7 @@ def upload_file():
         flash("Missing required fields.", "danger")
         return redirect(url_for("main_routes.admin_dashboard"))
 
+    # Save file
     filename = secure_filename(file.filename)
     upload_path = os.path.join(current_app.root_path, "static", "uploads", category, item_name, file_type)
     os.makedirs(upload_path, exist_ok=True)
@@ -114,13 +138,16 @@ def upload_file():
     flash(f"{file_type.capitalize()} uploaded successfully under '{item_name}'.", "success")
     return redirect(url_for("main_routes.admin_dashboard"))
 
+# User Profile
 @main_routes.route("/profile")
 @login_required
 def profile():
     return render_template("profile.html", user=current_user)
 
+# Contact Page
 @main_routes.route("/contact")
 def contact():
     return render_template("contact.html")
+
 
 
