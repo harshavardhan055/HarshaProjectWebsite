@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Harsha Project Website</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 
     <script>
         // Load saved theme on page load
@@ -65,11 +65,12 @@
         }
 
         .flash {
-            padding: 0.5em;
+            padding: 0.5em 1em;
             margin: 1em auto;
             max-width: 600px;
             text-align: center;
             border-radius: 5px;
+            font-weight: 600;
         }
 
         .flash.success {
@@ -109,7 +110,7 @@
             <a href="{{ url_for('main_routes.register') }}">Register</a>
         {% endif %}
     </nav>
-    <hr>
+    <hr />
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
