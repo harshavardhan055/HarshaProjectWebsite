@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User, db, Project, Testing  # Ensure db and models are correctly imported
+from models import User, db, Project, Testing
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -13,12 +13,14 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Home Page
+# ---------------------- Home ----------------------
+
 @main_routes.route("/")
 def home():
     return render_template("index.html")
 
-# Login Route
+# ---------------------- Login ----------------------
+
 @main_routes.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -36,7 +38,8 @@ def login():
 
     return render_template("login.html")
 
-# Logout Route
+# ---------------------- Logout ----------------------
+
 @main_routes.route("/logout")
 @login_required
 def logout():
@@ -44,7 +47,8 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect(url_for("main_routes.home"))
 
-# Register Route
+# ---------------------- Register ----------------------
+
 @main_routes.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -79,7 +83,8 @@ def register():
 
     return render_template("register.html")
 
-# Projects Page with Search
+# ---------------------- Projects (List + Search) ----------------------
+
 @main_routes.route("/projects")
 @login_required
 def projects():
@@ -87,7 +92,8 @@ def projects():
     all_projects = Project.query.filter(Project.title.ilike(f"%{query}%")).all()
     return render_template("projects.html", projects=all_projects, query=query)
 
-# Testing Page with Search
+# ---------------------- Testing (List + Search) ----------------------
+
 @main_routes.route("/testing")
 @login_required
 def testing():
@@ -95,7 +101,58 @@ def testing():
     all_testings = Testing.query.filter(Testing.title.ilike(f"%{query}%")).all()
     return render_template("testing.html", testings=all_testings, query=query)
 
-# Admin Dashboard Page
+# ---------------------- Project Detail View ----------------------
+
+@main_routes.route("/projects/<project_name>")
+@login_required
+def project_detail(project_name):
+    project = Project.query.filter_by(title=project_name).first_or_404()
+    base_path = os.path.join("uploads", "projects", project_name)
+    static_path = os.path.join(current_app.static_folder, base_path)
+
+    def get_files(file_type):
+        folder = os.path.join(static_path, file_type)
+        if os.path.exists(folder):
+            return [os.path.join(base_path, file_type, f) for f in os.listdir(folder)]
+        return []
+
+    return render_template(
+        "project_detail.html",
+        item_name=project_name,
+        image_files=get_files("image"),
+        video_files=get_files("video"),
+        code_files=get_files("code"),
+        description_files=get_files("description"),
+        circuit_files=get_files("circuitdiagram")
+    )
+
+# ---------------------- Testing Detail View ----------------------
+
+@main_routes.route("/testing/<testing_name>")
+@login_required
+def testing_detail(testing_name):
+    testing = Testing.query.filter_by(title=testing_name).first_or_404()
+    base_path = os.path.join("uploads", "testing", testing_name)
+    static_path = os.path.join(current_app.static_folder, base_path)
+
+    def get_files(file_type):
+        folder = os.path.join(static_path, file_type)
+        if os.path.exists(folder):
+            return [os.path.join(base_path, file_type, f) for f in os.listdir(folder)]
+        return []
+
+    return render_template(
+        "testing_detail.html",
+        item_name=testing_name,
+        image_files=get_files("image"),
+        video_files=get_files("video"),
+        code_files=get_files("code"),
+        description_files=get_files("description"),
+        circuit_files=get_files("circuitdiagram")
+    )
+
+# ---------------------- Admin Dashboard ----------------------
+
 @main_routes.route("/admin/dashboard")
 @login_required
 def admin_dashboard():
@@ -104,7 +161,8 @@ def admin_dashboard():
         return redirect(url_for("main_routes.home"))
     return render_template("admin/dashboard.html")
 
-# Admin Upload Handler
+# ---------------------- Admin Upload ----------------------
+
 @main_routes.route("/admin/upload", methods=["POST"])
 @login_required
 def upload_file():
@@ -122,25 +180,19 @@ def upload_file():
         return redirect(url_for("main_routes.admin_dashboard"))
 
     # Create or fetch entry
-    if category == 'projects':
-        item = Project.query.filter_by(title=item_name).first()
-        if not item:
-            item = Project(title=item_name, user_id=current_user.id)
-            db.session.add(item)
-    else:
-        item = Testing.query.filter_by(title=item_name).first()
-        if not item:
-            item = Testing(title=item_name, user_id=current_user.id)
-            db.session.add(item)
+    item = Project.query.filter_by(title=item_name).first() if category == 'projects' else Testing.query.filter_by(title=item_name).first()
+    if not item:
+        item = Project(title=item_name, user_id=current_user.id) if category == 'projects' else Testing(title=item_name, user_id=current_user.id)
+        db.session.add(item)
 
-    # Save uploaded file
+    # Save file
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         upload_path = os.path.join(current_app.root_path, "static", "uploads", category, item_name, file_type)
         os.makedirs(upload_path, exist_ok=True)
-        file.save(os.path.join(upload_path, filename))
+        full_path = os.path.join(upload_path, filename)
+        file.save(full_path)
 
-        # Store reference in DB (one per type)
         path = f"uploads/{category}/{item_name}/{file_type}/{filename}"
         if file_type == "image":
             item.image_path = path
@@ -149,29 +201,30 @@ def upload_file():
         elif file_type == "circuitdiagram":
             item.circuit_diagram = path
         elif file_type == "code":
-            item.code = open(os.path.join(upload_path, filename), "r", encoding="utf-8", errors="ignore").read()
+            item.code = open(full_path, "r", encoding="utf-8", errors="ignore").read()
         elif file_type == "description":
-            item.description = open(os.path.join(upload_path, filename), "r", encoding="utf-8", errors="ignore").read()
+            item.description = open(full_path, "r", encoding="utf-8", errors="ignore").read()
         elif file_type == "connections":
-            item.connections = open(os.path.join(upload_path, filename), "r", encoding="utf-8", errors="ignore").read()
+            item.connections = open(full_path, "r", encoding="utf-8", errors="ignore").read()
         elif file_type == "procedure":
-            item.procedure = open(os.path.join(upload_path, filename), "r", encoding="utf-8", errors="ignore").read()
+            item.procedure = open(full_path, "r", encoding="utf-8", errors="ignore").read()
 
     db.session.commit()
     flash(f"{file_type.capitalize()} uploaded and saved for '{item_name}'", "success")
     return redirect(url_for("main_routes.admin_dashboard"))
 
-# User Profile
+# ---------------------- Profile ----------------------
+
 @main_routes.route("/profile")
 @login_required
 def profile():
     return render_template("profile.html", user=current_user)
 
-# Contact Page
+# ---------------------- Contact ----------------------
+
 @main_routes.route("/contact")
 def contact():
     return render_template("contact.html")
-
 
 
 
