@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Projects</h2>
-<p>List of user projects will appear here.</p>
+
+<!-- Search Bar -->
+<form method="get" action="{{ url_for('main_routes.projects') }}">
+    <input type="text" name="search" placeholder="Search projects..." value="{{ search_query|default('') }}">
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+{% if projects %}
+    <ul>
+        {% for project in projects %}
+            <li><a href="{{ url_for('main_routes.project_detail', project_name=project) }}">{{ project }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No projects found.</p>
+{% endif %}
 {% endblock %}
