@@ -4,7 +4,8 @@
 
 <!-- Search Bar -->
 <form method="get" action="{{ url_for('main_routes.testing') }}">
-    <input type="text" name="search" placeholder="Search testing items..." value="{{ search_query|default('') }}">
+    <!-- Use 'q' because backend expects 'q' -->
+    <input type="text" name="q" placeholder="Search testing items..." value="{{ query|default('') }}">
     <button type="submit">Search</button>
 </form>
 
@@ -13,10 +14,13 @@
 {% if testings %}
     <ul class="testing-list">
         {% for testing in testings %}
-            <li><a href="{{ url_for('main_routes.testing_detail', testing_name=testing) }}">{{ testing }}</a></li>
+            <!-- If 'testing' is an object, use testing.title -->
+            <li><a href="{{ url_for('main_routes.testing_detail', testing_name=testing.title) }}">{{ testing.title }}</a></li>
         {% endfor %}
     </ul>
 {% else %}
     <p>No testing items found.</p>
 {% endif %}
+{% endblock %}
+
 {% endblock %}
