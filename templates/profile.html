@@ -19,13 +19,14 @@
 <!-- Upload New Photo -->
 <h3>Upload New Profile Photo</h3>
 <form method="POST" enctype="multipart/form-data" action="{{ url_for('main_routes.upload_profile_photo') }}">
+    {{ csrf_token() }}
     <input type="file" name="profile_photo" accept="image/*" required>
     <button type="submit">Upload</button>
 </form>
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul>
+    <ul class="flash-messages">
       {% for message in messages %}
         <li>{{ message }}</li>
       {% endfor %}
