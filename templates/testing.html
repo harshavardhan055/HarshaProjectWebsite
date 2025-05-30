@@ -11,7 +11,7 @@
 <hr>
 
 {% if testings %}
-    <ul>
+    <ul class="testing-list">
         {% for testing in testings %}
             <li><a href="{{ url_for('main_routes.testing_detail', testing_name=testing) }}">{{ testing }}</a></li>
         {% endfor %}
