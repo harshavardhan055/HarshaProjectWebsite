@@ -22,7 +22,7 @@
     --transition-speed: 0.3s;
 }
 
-/* Dark theme is default */
+/* Base Theme Setup */
 body {
     background-color: var(--background-dark);
     color: var(--text-on-dark);
@@ -33,51 +33,45 @@ body {
     transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
-/* Light theme class for when toggled */
 body.light-theme {
     background-color: var(--background-light);
     color: var(--text-on-light);
 }
 
+/* Navbar */
 .navbar {
     background-color: var(--surface-dark);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
-
 .light-theme .navbar {
     background-color: var(--surface-light);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-
 .navbar-brand {
     color: var(--secondary-color) !important;
     font-weight: bold;
     font-size: 1.5rem;
 }
-
 .nav-link {
     color: var(--text-on-dark) !important;
     margin: 0 var(--spacing-sm);
     transition: color var(--transition-speed);
 }
-
 .light-theme .nav-link {
     color: var(--text-on-light) !important;
 }
-
 .nav-link:hover,
 .nav-link:focus {
     color: var(--secondary-color) !important;
 }
-
 .navbar-toggler {
     border-color: var(--text-on-dark);
 }
-
 .light-theme .navbar-toggler {
     border-color: var(--text-on-light);
 }
 
+/* Card Styles */
 .card {
     background-color: var(--surface-dark);
     border: none;
@@ -86,51 +80,44 @@ body.light-theme {
     margin-bottom: var(--spacing-lg);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .light-theme .card {
     background-color: var(--surface-light);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
-
 .card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
-
 .light-theme .card:hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
-
 .card-img-top {
     border-top-left-radius: var(--border-radius);
     border-top-right-radius: var(--border-radius);
     height: 200px;
     object-fit: cover;
 }
-
 .card-title {
     color: var(--secondary-color);
     font-weight: bold;
 }
-
 .light-theme .card-title {
     color: var(--primary-color);
 }
 
+/* Buttons */
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
     border-radius: var(--border-radius);
     transition: background-color var(--transition-speed), transform var(--transition-speed);
 }
-
 .btn-primary:hover,
 .btn-primary:focus {
     background-color: var(--primary-light);
     border-color: var(--primary-light);
     transform: scale(1.05);
 }
-
 .btn-secondary {
     background-color: var(--secondary-color);
     border-color: var(--secondary-color);
@@ -138,24 +125,21 @@ body.light-theme {
     border-radius: var(--border-radius);
     transition: background-color var(--transition-speed), transform var(--transition-speed);
 }
-
 .btn-secondary:hover,
 .btn-secondary:focus {
     background-color: #04f7e0;
     border-color: #04f7e0;
     transform: scale(1.05);
 }
-
 .btn-outline-light {
     border-radius: var(--border-radius);
 }
-
 .light-theme .btn-outline-light {
     color: var(--text-on-light);
     border-color: var(--text-on-light);
 }
 
-/* Forms */
+/* Form Inputs */
 .form-control {
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -163,65 +147,56 @@ body.light-theme {
     color: var(--text-on-dark);
     padding: var(--spacing-md);
 }
-
 .light-theme .form-control {
     background-color: var(--surface-light);
     border: 1px solid rgba(0, 0, 0, 0.2);
     color: var(--text-on-light);
 }
-
 .form-control:focus {
     background-color: rgba(255, 255, 255, 0.15);
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 0.25rem rgba(3, 218, 198, 0.25);
 }
-
 .light-theme .form-control:focus {
     background-color: var(--surface-light);
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.25rem rgba(98, 0, 234, 0.25);
 }
-
 label {
     color: var(--text-on-dark);
     margin-bottom: var(--spacing-xs);
 }
-
 .light-theme label {
     color: var(--text-on-light);
 }
 
-/* Alert Messages */
+/* Alerts */
 .alert {
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-lg);
 }
-
 .alert-success {
     background-color: rgba(0, 230, 118, 0.1);
     border-color: var(--success-color);
     color: var(--success-color);
 }
-
 .alert-danger {
     background-color: rgba(207, 102, 121, 0.1);
     border-color: var(--error-color);
     color: var(--error-color);
 }
-
 .alert-info {
     background-color: rgba(33, 150, 243, 0.1);
     border-color: var(--info-color);
     color: var(--info-color);
 }
-
 .alert-warning {
     background-color: rgba(255, 171, 64, 0.1);
     border-color: var(--warning-color);
     color: var(--warning-color);
 }
 
-/* Home page background */
+/* Hero Section */
 .home-hero {
     background-image: url('https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea');
     background-size: cover;
@@ -234,7 +209,6 @@ label {
     justify-content: center;
     margin-bottom: var(--spacing-xl);
 }
-
 .home-hero::before {
     content: '';
     position: absolute;
@@ -244,21 +218,18 @@ label {
     left: 0;
     background-color: rgba(0, 0, 0, 0.7);
 }
-
 .hero-content {
     position: relative;
     text-align: center;
     z-index: 1;
     padding: var(--spacing-lg);
 }
-
 .hero-title {
     color: var(--secondary-color);
     font-size: 3rem;
     font-weight: bold;
     margin-bottom: var(--spacing-md);
 }
-
 .hero-subtitle {
     color: var(--text-on-dark);
     font-size: 1.5rem;
@@ -272,7 +243,6 @@ footer {
     padding: var(--spacing-lg) 0;
     margin-top: var(--spacing-xl);
 }
-
 .light-theme footer {
     background-color: var(--surface-light);
     color: var(--text-on-light);
@@ -282,27 +252,22 @@ footer {
 .project-header {
     margin-bottom: var(--spacing-lg);
 }
-
 .project-title {
     color: var(--secondary-color);
     font-size: 2.5rem;
     margin-bottom: var(--spacing-sm);
 }
-
 .light-theme .project-title {
     color: var(--primary-color);
 }
-
 .project-meta {
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.9rem;
     margin-bottom: var(--spacing-md);
 }
-
 .light-theme .project-meta {
     color: rgba(0, 0, 0, 0.7);
 }
-
 .project-image {
     width: 100%;
     max-height: 400px;
@@ -310,11 +275,9 @@ footer {
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-lg);
 }
-
 .project-section {
     margin-bottom: var(--spacing-xl);
 }
-
 .section-title {
     color: var(--secondary-color);
     font-size: 1.5rem;
@@ -322,12 +285,10 @@ footer {
     padding-bottom: var(--spacing-sm);
     border-bottom: 2px solid var(--secondary-color);
 }
-
 .light-theme .section-title {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
 }
-
 .code-block {
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: var(--border-radius);
@@ -336,7 +297,6 @@ footer {
     overflow-x: auto;
     color: #e6e6e6;
 }
-
 .light-theme .code-block {
     background-color: rgba(0, 0, 0, 0.05);
     color: #121212;
@@ -350,22 +310,19 @@ footer {
     margin-bottom: var(--spacing-lg);
     border-radius: var(--border-radius);
 }
-
 .admin-card {
     height: 100%;
 }
-
 .admin-actions {
     display: flex;
     gap: var(--spacing-sm);
 }
 
-/* Theme toggle switch */
+/* Theme Switch Toggle */
 .theme-switch-wrapper {
     display: flex;
     align-items: center;
 }
-
 .theme-switch {
     margin-left: var(--spacing-sm);
     position: relative;
@@ -373,60 +330,38 @@ footer {
     width: 40px;
     height: 20px;
 }
-
 .theme-switch input {
-    display: none;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
-
-.slider {
+.theme-switch span {
     position: absolute;
     cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: var(--surface-light);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--text-on-dark);
     transition: 0.4s;
     border-radius: 34px;
 }
-
-.slider:before {
+.theme-switch span:before {
     position: absolute;
     content: "";
     height: 14px;
     width: 14px;
     left: 3px;
     bottom: 3px;
-    background-color: var(--primary-color);
+    background-color: var(--background-dark);
     transition: 0.4s;
     border-radius: 50%;
 }
-
-input:checked + .slider {
-    background-color: var(--secondary-color);
+.theme-switch input:checked + span {
+    background-color: var(--text-on-light);
 }
-
-input:checked + .slider:before {
+.theme-switch input:checked + span:before {
     transform: translateX(20px);
+    background-color: var(--background-light);
 }
 
-
-/* Responsive adjustments */
-@media (max-width: 767.98px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.2rem;
-    }
-    
-    .project-title {
-        font-size: 2rem;
-    }
-    
-    .section-title {
-        font-size: 1.3rem;
-    }
-    
-    .card-img-top {
-        height: 150px;
-    }
-}
