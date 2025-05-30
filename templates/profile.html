@@ -1,5 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>User Profile</h2>
-<p>Welcome, {{ user.username }}!</p>
+
+<p><strong>Username:</strong> {{ user.username }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+
+<!-- Profile Photo -->
+<div>
+    <h3>Profile Photo</h3>
+    {% if user.profile_photo %}
+        <img src="{{ url_for('static', filename='uploads/profile_photos/' ~ user.profile_photo) }}" alt="Profile Photo" width="150" style="border-radius: 50%; border: 2px solid #ccc;">
+    {% else %}
+        <!-- Default placeholder image -->
+        <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Profile Photo" width="150" style="border-radius: 50%; border: 2px solid #ccc;">
+    {% endif %}
+</div>
+
+<!-- Upload New Photo -->
+<h3>Upload New Profile Photo</h3>
+<form method="POST" enctype="multipart/form-data" action="{{ url_for('main_routes.upload_profile_photo') }}">
+    <input type="file" name="profile_photo" accept="image/*" required>
+    <button type="submit">Upload</button>
+</form>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
 {% endblock %}
