@@ -1,3 +1,5 @@
+{% extends 'admin_base.html' %}
+{% block content %}
 <h2>Upload File</h2>
 <form method="POST" enctype="multipart/form-data">
     <label>Select File:</label>
@@ -7,10 +9,12 @@
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul>
+    <ul class="flash-messages">
       {% for message in messages %}
         <li>{{ message }}</li>
       {% endfor %}
     </ul>
   {% endif %}
 {% endwith %}
+{% endblock %}
+
