@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Testing</h2>
-<p>Testing projects and electronics experiments will be shown here.</p>
+
+<!-- Search Bar -->
+<form method="get" action="{{ url_for('main_routes.testing') }}">
+    <input type="text" name="search" placeholder="Search testing items..." value="{{ search_query|default('') }}">
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+{% if testings %}
+    <ul>
+        {% for testing in testings %}
+            <li><a href="{{ url_for('main_routes.testing_detail', testing_name=testing) }}">{{ testing }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No testing items found.</p>
+{% endif %}
 {% endblock %}
