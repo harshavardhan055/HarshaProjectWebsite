@@ -20,11 +20,17 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.Text)
+    
+    # Upload status flags
     image_uploaded = db.Column(db.Boolean, default=False)
     code_uploaded = db.Column(db.Boolean, default=False)
     circuit_diagram_uploaded = db.Column(db.Boolean, default=False)
     video_uploaded = db.Column(db.Boolean, default=False)
-    folder_path = db.Column(db.String(256))  # e.g. static/uploads/projects/<title>/
+    description_uploaded = db.Column(db.Boolean, default=False)
+    connections_uploaded = db.Column(db.Boolean, default=False)
+    procedure_uploaded = db.Column(db.Boolean, default=False)
+
+    folder_path = db.Column(db.String(256))  # static/uploads/projects/<title>/
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -36,11 +42,17 @@ class Testing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.Text)
+    
+    # Upload status flags
     image_uploaded = db.Column(db.Boolean, default=False)
     code_uploaded = db.Column(db.Boolean, default=False)
     circuit_diagram_uploaded = db.Column(db.Boolean, default=False)
     video_uploaded = db.Column(db.Boolean, default=False)
-    folder_path = db.Column(db.String(256))  # e.g. static/uploads/testing/<title>/
+    description_uploaded = db.Column(db.Boolean, default=False)
+    connections_uploaded = db.Column(db.Boolean, default=False)
+    procedure_uploaded = db.Column(db.Boolean, default=False)
+
+    folder_path = db.Column(db.String(256))  # static/uploads/testing/<title>/
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
