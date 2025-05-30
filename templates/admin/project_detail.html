@@ -2,6 +2,7 @@
 {% block content %}
 
 <h2>Project: {{ item_name }}</h2>
+<a href="{{ url_for('main_routes.projects') }}">← Back to Projects List</a>
 
 <!-- Description -->
 {% if description_files %}
@@ -11,24 +12,34 @@
             <li><a href="{{ url_for('static', filename=file) }}" target="_blank">{{ file.split('/')[-1] }}</a></li>
         {% endfor %}
     </ul>
+{% else %}
+    <p>No description files uploaded.</p>
 {% endif %}
 
 <!-- Images -->
 {% if image_files %}
     <h3>Images</h3>
-    {% for image in image_files %}
-        <img src="{{ url_for('static', filename=image) }}" width="300" style="margin: 10px;">
-    {% endfor %}
+    <div class="image-gallery">
+        {% for image in image_files %}
+            <img src="{{ url_for('static', filename=image) }}" width="300" style="margin: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No images uploaded.</p>
 {% endif %}
 
 <!-- Videos -->
 {% if video_files %}
     <h3>Videos</h3>
-    {% for video in video_files %}
-        <video width="400" controls style="margin: 10px;">
-            <source src="{{ url_for('static', filename=video) }}">
-        </video>
-    {% endfor %}
+    <div class="video-gallery">
+        {% for video in video_files %}
+            <video width="400" controls style="margin: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <source src="{{ url_for('static', filename=video) }}">
+            </video>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No videos uploaded.</p>
 {% endif %}
 
 <!-- Code Files -->
@@ -39,14 +50,20 @@
             <li><a href="{{ url_for('static', filename=code) }}" target="_blank">{{ code.split('/')[-1] }}</a></li>
         {% endfor %}
     </ul>
+{% else %}
+    <p>No code files uploaded.</p>
 {% endif %}
 
 <!-- Circuit Diagrams -->
 {% if circuit_files %}
     <h3>Circuit Diagrams</h3>
-    {% for circuit in circuit_files %}
-        <img src="{{ url_for('static', filename=circuit) }}" width="300" style="margin: 10px;">
-    {% endfor %}
+    <div class="circuit-gallery">
+        {% for circuit in circuit_files %}
+            <img src="{{ url_for('static', filename=circuit) }}" width="300" style="margin: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No circuit diagrams uploaded.</p>
 {% endif %}
 
 {% endblock %}
