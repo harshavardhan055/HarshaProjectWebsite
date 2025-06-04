@@ -126,7 +126,11 @@ def get_files_for_item(base_static_path, base_path, file_type):
     """Return list of files for given type if folder exists."""
     folder = os.path.join(base_static_path, file_type)
     if os.path.exists(folder) and os.path.isdir(folder):
-        return [os.path.join(base_path, file_type, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+        return [
+            os.path.join(base_path, file_type, f)
+            for f in os.listdir(folder)
+            if os.path.isfile(os.path.join(folder, f))
+        ]
     return []
 
 
