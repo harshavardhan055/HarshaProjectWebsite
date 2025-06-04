@@ -1,0 +1,23 @@
+{% macro item_card(item, item_type, placeholder_img) %}
+<div class="col">
+    <div class="card h-100">
+        {% if item.image_path %}
+        <img src="{{ url_for('static', filename=item.image_path) }}" class="card-img-top" alt="{{ item.title }}">
+        {% else %}
+        <img src="{{ placeholder_img }}" class="card-img-top" alt="{{ item.title }} placeholder">
+        {% endif %}
+        <div class="card-body">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <p class="card-text">{{ item.description|truncate(150) }}</p>
+        </div>
+        <div class="card-footer bg-transparent border-0">
+            {% if item_type == 'project' %}
+                <a href="{{ url_for('main_routes.project_detail', project_id=item.id) }}" class="btn btn-primary">View Details</a>
+            {% elif item_type == 'testing' %}
+                <a href="{{ url_for('main_routes.testing_detail', testing_id=item.id) }}" class="btn btn-primary">View Details</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
