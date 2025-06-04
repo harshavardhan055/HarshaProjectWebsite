@@ -1,23 +1,70 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-<h2>Testing</h2>
 
-<!-- Search Bar -->
-<form method="get" action="{{ url_for('main_routes.testing') }}">
-    <input type="text" name="search" placeholder="Search testing items..." value="{{ search_query|default('') }}">
-    <button type="submit">Search</button>
-</form>
+<h2>Testing: {{ item_name }}</h2>
+<a href="{{ url_for('main_routes.testing') }}">← Back to Testing List</a>
 
-<hr>
-
-{% if testings %}
-    <ul class="testing-list">
-        {% for testing in testings %}
-            <li><a href="{{ url_for('main_routes.testing_detail', testing_name=testing) }}">{{ testing }}</a></li>
+<!-- Description -->
+{% if description_files %}
+    <h3>Description</h3>
+    <ul>
+        {% for file in description_files %}
+            <li><a href="{{ url_for('static', filename=file) }}" target="_blank">{{ file.split('/')[-1] }}</a></li>
         {% endfor %}
     </ul>
 {% else %}
-    <p>No testing items found.</p>
+    <p>No description files uploaded.</p>
 {% endif %}
+
+<!-- Images -->
+{% if image_files %}
+    <h3>Images</h3>
+    <div class="image-gallery">
+        {% for image in image_files %}
+            <img src="{{ url_for('static', filename=image) }}" width="300" style="margin: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No images uploaded.</p>
+{% endif %}
+
+<!-- Videos -->
+{% if video_files %}
+    <h3>Videos</h3>
+    <div class="video-gallery">
+        {% for video in video_files %}
+            <video width="400" controls style="margin: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <source src="{{ url_for('static', filename=video) }}">
+            </video>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No videos uploaded.</p>
+{% endif %}
+
+<!-- Code Files -->
+{% if code_files %}
+    <h3>Code Files</h3>
+    <ul>
+        {% for code in code_files %}
+            <li><a href="{{ url_for('static', filename=code) }}" target="_blank">{{ code.split('/')[-1] }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No code files uploaded.</p>
+{% endif %}
+
+<!-- Circuit Diagrams -->
+{% if circuit_files %}
+    <h3>Circuit Diagrams</h3>
+    <div class="circuit-gallery">
+        {% for circuit in circuit_files %}
+            <img src="{{ url_for('static', filename=circuit) }}" width="300" style="margin: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No circuit diagrams uploaded.</p>
+{% endif %}
+
 {% endblock %}
 
