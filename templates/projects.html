@@ -5,7 +5,7 @@
 <a href="{{ url_for('main_routes.projects') }}">← Back to Projects List</a>
 
 <!-- Description -->
-{% if description_files and description_files|length > 0 %}
+{% if description_files %}
     <h3>Description</h3>
     <ul>
         {% for file in description_files %}
@@ -17,7 +17,7 @@
 {% endif %}
 
 <!-- Images -->
-{% if image_files and image_files|length > 0 %}
+{% if image_files %}
     <h3>Images</h3>
     <div class="image-gallery">
         {% for image in image_files %}
@@ -29,7 +29,7 @@
 {% endif %}
 
 <!-- Videos -->
-{% if video_files and video_files|length > 0 %}
+{% if video_files %}
     <h3>Videos</h3>
     <div class="video-gallery">
         {% for video in video_files %}
@@ -43,7 +43,7 @@
 {% endif %}
 
 <!-- Code Files -->
-{% if code_files and code_files|length > 0 %}
+{% if code_files %}
     <h3>Code Files</h3>
     <ul>
         {% for code in code_files %}
@@ -55,7 +55,7 @@
 {% endif %}
 
 <!-- Circuit Diagrams -->
-{% if circuit_files and circuit_files|length > 0 %}
+{% if circuit_files %}
     <h3>Circuit Diagrams</h3>
     <div class="circuit-gallery">
         {% for circuit in circuit_files %}
