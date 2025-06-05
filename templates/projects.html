@@ -1,18 +1,14 @@
-{% extends 'base.html' %}
-{% block title %}Projects - Harsha Projects{% endblock %}
-{% block content %}
-<div class="container py-5">
-    <h2>Projects List</h2>
-    {% if project_names %}
-        <ul class="list-group">
-            {% for project in project_names %}
-                <li class="list-group-item">
-                    <a href="{{ url_for('main_routes.project_detail', item_name=project) }}">{{ project }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No projects available yet.</p>
-    {% endif %}
-</div>
-{% endblock %}
+<form method="get" action="{{ url_for('main_routes.projects') }}">
+    <input type="text" name="q" placeholder="Search projects..." value="{{ query|default('') }}">
+    <button type="submit">Search</button>
+</form>
+
+{% if projects %}
+    <ul>
+        {% for project in projects %}
+            <li><a href="{{ url_for('main_routes.project_detail', slug=project.slug) }}">{{ project.title }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No projects found.</p>
+{% endif %}
