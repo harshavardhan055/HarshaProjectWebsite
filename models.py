@@ -1,63 +1,53 @@
-from app import db
-from flask_login import UserMixin
-from datetime import datetime
+from slugify import slugify
+from your_flask_app import db  # Adjust import as needed
 
-class User(UserMixin, db.Model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
+    password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    profile_photo = db.Column(db.String(256), nullable=True)  # Add profile photo path
 
-    projects = db.relationship('Project', backref='author', lazy='dynamic')
-    testing_items = db.relationship('Testing', backref='author', lazy='dynamic')
+    # Add any other fields you have here
 
-    def __repr__(self):
-        return f'<User {self.username}>'
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), unique=True, nullable=False)
-    description = db.Column(db.Text)
-    
-    # Upload status flags
-    image_uploaded = db.Column(db.Boolean, default=False)
-    code_uploaded = db.Column(db.Boolean, default=False)
-    circuit_diagram_uploaded = db.Column(db.Boolean, default=False)
-    video_uploaded = db.Column(db.Boolean, default=False)
-    description_uploaded = db.Column(db.Boolean, default=False)
-    connections_uploaded = db.Column(db.Boolean, default=False)
-    procedure_uploaded = db.Column(db.Boolean, default=False)
-
-    folder_path = db.Column(db.String(256))  # static/uploads/projects/<title>/
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    title = db.Column(db.String(100), unique=True, nullable=False)
+    slug = db.Column(db.String(100), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f'<Project {self.title}>'
+    # Add paths or content fields as needed, for example:
+    image_path = db.Column(db.String(256))
+    video_path = db.Column(db.String(256))
+    circuit_diagram = db.Column(db.String(256))
+    code = db.Column(db.Text)
+    description = db.Column(db.Text)
+    # Add other fields as needed
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.slug and self.title:
+            self.slug = slugify(self.title)
+
 
 class Testing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), unique=True, nullable=False)
-    description = db.Column(db.Text)
-    
-    # Upload status flags
-    image_uploaded = db.Column(db.Boolean, default=False)
-    code_uploaded = db.Column(db.Boolean, default=False)
-    circuit_diagram_uploaded = db.Column(db.Boolean, default=False)
-    video_uploaded = db.Column(db.Boolean, default=False)
-    description_uploaded = db.Column(db.Boolean, default=False)
-    connections_uploaded = db.Column(db.Boolean, default=False)
-    procedure_uploaded = db.Column(db.Boolean, default=False)
-
-    folder_path = db.Column(db.String(256))  # static/uploads/testing/<title>/
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    title = db.Column(db.String(100), unique=True, nullable=False)
+    slug = db.Column(db.String(100), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f'<Testing {self.title}>'
+    # Similar fields as Project
+    image_path = db.Column(db.String(256))
+    video_path = db.Column(db.String(256))
+    circuit_diagram = db.Column(db.String(256))
+    code = db.Column(db.Text)
+    description = db.Column(db.Text)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.slug and self.title:
+            self.slug = slugify(self.title)
 
 
