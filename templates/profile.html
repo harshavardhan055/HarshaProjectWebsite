@@ -1,41 +1,16 @@
-{% extends 'base.html' %}
-{% block title %}User Profile - Harsha Projects{% endblock %}
-{% block content %}
-<div class="form-container">
-    <h2>User Profile</h2>
+<h2>User Profile</h2>
 
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
+<p>Username: {{ user.username }}</p>
+<p>Email: {{ user.email }}</p>
 
-    <!-- Profile Photo -->
-    <div>
-        <h3>Profile Photo</h3>
-        {% if user.profile_photo %}
-            <img src="{{ url_for('static', filename='uploads/profile_photos/' ~ user.profile_photo) }}" alt="Profile Photo" width="150" style="border-radius: 50%; border: 2px solid #ccc;">
-        {% else %}
-            <!-- Default placeholder image -->
-            <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Profile Photo" width="150" style="border-radius: 50%; border: 2px solid #ccc;">
-        {% endif %}
-    </div>
+{% if user.profile_photo %}
+    <img src="{{ url_for('static', filename=user.profile_photo) }}" alt="Profile Photo" width="150">
+{% else %}
+    <p>No profile photo uploaded yet.</p>
+{% endif %}
 
-    <!-- Upload New Photo -->
-    <h3>Upload New Profile Photo</h3>
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('main_routes.upload_profile_photo') }}">
-        {{ csrf_token() }}
-        <input type="file" name="profile_photo" accept="image/*" required>
-        <button type="submit">Upload</button>
-    </form>
-
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class="flash-messages">
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-</div>
-{% endblock %}
-
-
+<form action="{{ url_for('main_routes.upload_profile_photo') }}" method="post" enctype="multipart/form-data">
+    <label for="photo">Upload Profile Photo:</label>
+    <input type="file" name="photo" id="photo" accept="image/*" required>
+    <button type="submit">Upload</button>
+</form>
