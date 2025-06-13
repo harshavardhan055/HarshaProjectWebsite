@@ -10,54 +10,37 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    projects = db.relationship('Project', backref='author', lazy='dynamic')
-    testing_items = db.relationship('Testing', backref='author', lazy='dynamic')
-
-    def __repr__(self):
-        return f'<User {self.username}>'
+    projects = db.relationship("Project", backref="owner", lazy=True)
+    testings = db.relationship("Testing", backref="owner", lazy=True)
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), unique=True, nullable=False)
+    title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
-    
-    # Upload status flags
-    image_uploaded = db.Column(db.Boolean, default=False)
-    code_uploaded = db.Column(db.Boolean, default=False)
-    circuit_diagram_uploaded = db.Column(db.Boolean, default=False)
-    video_uploaded = db.Column(db.Boolean, default=False)
-    description_uploaded = db.Column(db.Boolean, default=False)
-    connections_uploaded = db.Column(db.Boolean, default=False)
-    procedure_uploaded = db.Column(db.Boolean, default=False)
-
-    folder_path = db.Column(db.String(256))  # static/uploads/projects/<title>/
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f'<Project {self.title}>'
+    # Uploaded file paths (stored as strings)
+    image_filename = db.Column(db.String(255))
+    code_filename = db.Column(db.String(255))
+    video_filename = db.Column(db.String(255))
+    diagram_filename = db.Column(db.String(255))
+    text_filename = db.Column(db.String(255))  # project info / procedure text
+
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
 class Testing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), unique=True, nullable=False)
+    title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
-    
-    # Upload status flags
-    image_uploaded = db.Column(db.Boolean, default=False)
-    code_uploaded = db.Column(db.Boolean, default=False)
-    circuit_diagram_uploaded = db.Column(db.Boolean, default=False)
-    video_uploaded = db.Column(db.Boolean, default=False)
-    description_uploaded = db.Column(db.Boolean, default=False)
-    connections_uploaded = db.Column(db.Boolean, default=False)
-    procedure_uploaded = db.Column(db.Boolean, default=False)
-
-    folder_path = db.Column(db.String(256))  # static/uploads/testing/<title>/
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f'<Testing {self.title}>'
+    image_filename = db.Column(db.String(255))
+    code_filename = db.Column(db.String(255))
+    video_filename = db.Column(db.String(255))
+    diagram_filename = db.Column(db.String(255))
+    text_filename = db.Column(db.String(255))  # testing notes / result summary
+
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
 
 
