@@ -1,4 +1,5 @@
 import os
+import re
 from flask import (
     Blueprint, render_template, redirect, url_for,
     request, flash, current_app
@@ -7,21 +8,24 @@ from flask_login import login_user, logout_user, login_required, current_user
 from models import User, db, Project, Testing
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from slugify import slugify
 
 main_routes = Blueprint("main_routes", __name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino', 'txt'}
 
+# ✅ Local custom slugify function
+def custom_slugify(text):
+    text = text.lower()
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[-\s]+', '-', text)
+    return text.strip('-')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 @main_routes.route("/")
 def home():
     return render_template("index.html")
-
 
 @main_routes.route("/login", methods=["GET", "POST"])
 def login():
@@ -44,14 +48,12 @@ def login():
 
     return render_template("login.html")
 
-
 @main_routes.route("/logout")
 @login_required
 def logout():
     logout_user()
     flash("Logged out successfully.", "info")
     return redirect(url_for("main_routes.home"))
-
 
 @main_routes.route("/register", methods=["GET", "POST"])
 def register():
@@ -90,7 +92,6 @@ def register():
 
     return render_template("register.html")
 
-
 @main_routes.route("/projects")
 @login_required
 def projects():
@@ -98,14 +99,12 @@ def projects():
     projects = Project.query.filter(Project.title.ilike(f"%{query}%")).all()
     return render_template("projects.html", projects=projects, query=query)
 
-
 @main_routes.route("/testing")
 @login_required
 def testing():
     query = request.args.get("q", "")
     testings = Testing.query.filter(Testing.title.ilike(f"%{query}%")).all()
     return render_template("testing.html", testings=testings, query=query)
-
 
 def get_files_for_item(base_static_path, base_path, file_type):
     folder = os.path.join(base_static_path, file_type)
@@ -116,9 +115,6 @@ def get_files_for_item(base_static_path, base_path, file_type):
             if os.path.isfile(os.path.join(folder, f))
         ]
     return []
-
-
-# Fix project_detail and testing_detail to use slug instead of title
 
 @main_routes.route("/projects/<slug>")
 @login_required
@@ -137,7 +133,6 @@ def project_detail(slug):
         circuit_files=get_files_for_item(static_path, base_path, "circuitdiagram"),
     )
 
-
 @main_routes.route("/testing/<slug>")
 @login_required
 def testing_detail(slug):
@@ -155,7 +150,6 @@ def testing_detail(slug):
         circuit_files=get_files_for_item(static_path, base_path, "circuitdiagram"),
     )
 
-
 @main_routes.route("/admin/dashboard")
 @login_required
 def admin_dashboard():
@@ -163,7 +157,6 @@ def admin_dashboard():
         flash("Access denied: Admins only.", "danger")
         return redirect(url_for("main_routes.home"))
     return render_template("admin/dashboard.html")
-
 
 @main_routes.route("/admin/upload", methods=["POST"])
 @login_required
@@ -189,16 +182,14 @@ def upload_file():
         flash("File type not allowed.", "danger")
         return redirect(url_for("main_routes.admin_dashboard"))
 
-    # Find or create item by slug now
-    item = None
-    slug = slugify(item_name)
+    slug = custom_slugify(item_name)
 
     if category == 'projects':
         item = Project.query.filter_by(slug=slug).first()
         if not item:
             item = Project(title=item_name, slug=slug, user_id=current_user.id)
             db.session.add(item)
-    else:  # testing
+    else:
         item = Testing.query.filter_by(slug=slug).first()
         if not item:
             item = Testing(title=item_name, slug=slug, user_id=current_user.id)
@@ -238,12 +229,10 @@ def upload_file():
     flash(f"{file_type.capitalize()} uploaded and saved for '{item_name}'.", "success")
     return redirect(url_for("main_routes.admin_dashboard"))
 
-
 @main_routes.route("/profile")
 @login_required
 def profile():
     return render_template("profile.html", user=current_user)
-
 
 @main_routes.route("/profile/upload_photo", methods=["POST"])
 @login_required
@@ -262,22 +251,19 @@ def upload_profile_photo():
         flash("Invalid file or no file selected.", "danger")
     return redirect(url_for("main_routes.profile"))
 
-
 @main_routes.route("/contact")
 def contact():
     return render_template("contact.html")
-
 
 @main_routes.app_errorhandler(403)
 def forbidden_error(error):
     return render_template("403.html"), 403
 
-
 @main_routes.app_errorhandler(404)
 def not_found_error(error):
     return render_template("404.html"), 404
 
-
 @main_routes.app_errorhandler(500)
 def internal_error(error):
     return render_template("500.html"), 500
+
