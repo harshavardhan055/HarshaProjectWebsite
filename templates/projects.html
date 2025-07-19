@@ -1,4 +1,4 @@
-<form method="get" action="{{ url_for('main_routes.projects') }}">
+<form method="get" action="{{ url_for('main_routes.project') }}">
     <input type="text" name="q" placeholder="Search projects..." value="{{ query|default('') }}">
     <button type="submit">Search</button>
 </form>
@@ -12,3 +12,4 @@
 {% else %}
     <p>No projects found.</p>
 {% endif %}
+
