@@ -1,6 +1,10 @@
-from app_init import app  # ✅ Import app from app_init
-import routes  # ensure routes are registered
-import jinja_filters  # ensure Jinja filters are loaded
+from app_init import app  # ✅ Import app instance from app_init
+import routes             # ✅ Ensure routes are registered
+import jinja_filters      # ✅ Ensure Jinja filters are loaded
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Use port 5000 (default), or switch to another if needed (e.g., 8000 or 8080)
+    PORT = 5000
+
+    print(f"✅ Server starting at http://localhost:{PORT}")
+    app.run(host="0.0.0.0", port=PORT, debug=True)
