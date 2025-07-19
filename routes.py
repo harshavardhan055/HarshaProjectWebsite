@@ -21,6 +21,11 @@ def custom_slugify(text):
     text = re.sub(r'[-\s]+', '-', text)
     return text.strip('-')
 
+@main_routes.route("/about")
+def about():
+    """Render the about page."""
+    return render_template("about.html", title="About Harsha's Projects")
+
 @main_routes.route("/")
 def home():
     return render_template("index.html")
