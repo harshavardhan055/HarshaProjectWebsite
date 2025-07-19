@@ -3,16 +3,17 @@ import re
 from datetime import datetime
 from flask import (
     Blueprint, render_template, redirect, url_for,
-    request, flash, current_app
+    request, flash, current_app, send_from_directory
 )
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User, db, Project, Testing
+from models import User, db, Project, Testing # Import db from app_init, not app
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from utils import allowed_file, save_uploaded_file, delete_file # Import from utils
 
 main_routes = Blueprint("main_routes", __name__)
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino', 'txt'}
+# ALLOWED_EXTENSIONS is now read from app.config (defined in config.py)
 
 def custom_slugify(text):
     text = text.lower()
@@ -20,15 +21,15 @@ def custom_slugify(text):
     text = re.sub(r'[-\s]+', '-', text)
     return text.strip('-')
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @main_routes.route("/")
 def home():
     return render_template("index.html")
 
 @main_routes.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("main_routes.home"))
+
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
@@ -56,6 +57,9 @@ def logout():
 
 @main_routes.route("/register", methods=["GET", "POST"])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("main_routes.home"))
+
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip()
@@ -105,48 +109,55 @@ def testing():
     testings = Testing.query.filter(Testing.title.ilike(f"%{query}%")).all()
     return render_template("testing.html", testings=testings, query=query)
 
-def get_files_for_item(base_static_path, base_path, file_type):
-    folder = os.path.join(base_static_path, file_type)
-    if os.path.exists(folder) and os.path.isdir(folder):
-        return [
-            os.path.join(base_path, file_type, f)
-            for f in os.listdir(folder)
-            if os.path.isfile(os.path.join(folder, f))
-        ]
-    return []
+def get_files_for_item_display(item_object, base_upload_folder):
+    """
+    Constructs a dictionary of file paths for display based on item object's stored paths.
+    """
+    files_dict = {
+        "image_files": [],
+        "video_files": [],
+        "code_files": [],
+        "description_files": [],
+        "circuit_files": []
+    }
+
+    if item_object.image_path:
+        files_dict["image_files"].append(url_for('static', filename=item_object.image_path))
+    if item_object.video_path:
+        files_dict["video_files"].append(url_for('static', filename=item_object.video_path))
+    if item_object.circuit_diagram_path:
+        files_dict["circuit_files"].append(url_for('static', filename=item_object.circuit_diagram_path))
+
+    # For text content directly stored in DB, we don't have separate files to list.
+    # The content itself will be passed to the template.
+    return files_dict
 
 @main_routes.route("/projects/<slug>")
 @login_required
 def project_detail(slug):
     project = Project.query.filter_by(slug=slug).first_or_404()
-    base_path = os.path.join("uploads", "projects", project.slug)
-    static_path = os.path.join(current_app.static_folder, base_path)
-
+    
+    # Files are now handled directly via model paths if they are single files
+    # For content (code, description, etc.), the content is directly in the model
     return render_template(
         "project_detail.html",
-        item_name=project.title,
-        image_files=get_files_for_item(static_path, base_path, "image"),
-        video_files=get_files_for_item(static_path, base_path, "video"),
-        code_files=get_files_for_item(static_path, base_path, "code"),
-        description_files=get_files_for_item(static_path, base_path, "description"),
-        circuit_files=get_files_for_item(static_path, base_path, "circuitdiagram"),
+        item=project, # Pass the whole item object
+        image_url=url_for('static', filename=project.image_path) if project.image_path else None,
+        video_url=url_for('static', filename=project.video_path) if project.video_path else None,
+        circuit_diagram_url=url_for('static', filename=project.circuit_diagram_path) if project.circuit_diagram_path else None
     )
 
 @main_routes.route("/testing/<slug>")
 @login_required
 def testing_detail(slug):
-    testing = Testing.query.filter_by(slug=slug).first_or_404()
-    base_path = os.path.join("uploads", "testing", testing.slug)
-    static_path = os.path.join(current_app.static_folder, base_path)
+    testing_item = Testing.query.filter_by(slug=slug).first_or_404()
 
     return render_template(
         "testing_detail.html",
-        item_name=testing.title,
-        image_files=get_files_for_item(static_path, base_path, "image"),
-        video_files=get_files_for_item(static_path, base_path, "video"),
-        code_files=get_files_for_item(static_path, base_path, "code"),
-        description_files=get_files_for_item(static_path, base_path, "description"),
-        circuit_files=get_files_for_item(static_path, base_path, "circuitdiagram"),
+        item=testing_item, # Pass the whole item object
+        image_url=url_for('static', filename=testing_item.image_path) if testing_item.image_path else None,
+        video_url=url_for('static', filename=testing_item.video_path) if testing_item.video_path else None,
+        circuit_diagram_url=url_for('static', filename=testing_item.circuit_diagram_path) if testing_item.circuit_diagram_path else None
     )
 
 @main_routes.route("/admin/dashboard")
@@ -155,7 +166,11 @@ def admin_dashboard():
     if not current_user.is_admin:
         flash("Access denied: Admins only.", "danger")
         return redirect(url_for("main_routes.home"))
-    return render_template("admin/dashboard.html")
+    
+    projects = Project.query.all()
+    testings = Testing.query.all()
+    
+    return render_template("admin/dashboard.html", projects=projects, testings=testings)
 
 @main_routes.route("/admin/upload", methods=["POST"])
 @login_required
@@ -164,21 +179,12 @@ def upload_file():
         flash("Access denied: Admins only.", "danger")
         return redirect(url_for("main_routes.home"))
 
-    file = request.files.get("file")
     item_name = request.form.get("item_name", "").strip()
-    file_type = request.form.get("file_type", "").strip().lower()
-    category = request.form.get("category", "").strip().lower()
+    file_type = request.form.get("file_type", "").strip().lower() # e.g., 'image', 'code', 'description'
+    category = request.form.get("category", "").strip().lower() # 'projects' or 'testing'
 
     if not item_name or not file_type or category not in ['projects', 'testing']:
-        flash("Missing or invalid required fields.", "danger")
-        return redirect(url_for("main_routes.admin_dashboard"))
-
-    if not file or file.filename == "":
-        flash("No file selected for uploading.", "warning")
-        return redirect(url_for("main_routes.admin_dashboard"))
-
-    if not allowed_file(file.filename):
-        flash("File type not allowed.", "danger")
+        flash("Missing or invalid required fields (Item Name, File Type, Category).", "danger")
         return redirect(url_for("main_routes.admin_dashboard"))
 
     slug = custom_slugify(item_name)
@@ -188,46 +194,103 @@ def upload_file():
         if not item:
             item = Project(title=item_name, slug=slug, user_id=current_user.id)
             db.session.add(item)
-    else:
+            db.session.commit() # Commit to get an ID for the new item
+    else: # category == 'testing'
         item = Testing.query.filter_by(slug=slug).first()
         if not item:
             item = Testing(title=item_name, slug=slug, user_id=current_user.id)
             db.session.add(item)
+            db.session.commit() # Commit to get an ID for the new item
 
-    filename = secure_filename(file.filename)
-    upload_path = os.path.join(current_app.root_path, "static", "uploads", category, slug, file_type)
-    os.makedirs(upload_path, exist_ok=True)
-    full_path = os.path.join(upload_path, filename)
+    # Handle file uploads (image, video, circuitdiagram)
+    if file_type in {"image", "video", "circuitdiagram"}:
+        file = request.files.get("file")
+        if not file or file.filename == "":
+            flash(f"No file selected for {file_type}.", "warning")
+            return redirect(url_for("main_routes.admin_dashboard"))
 
-    try:
-        file.save(full_path)
-    except Exception as e:
-        flash(f"Failed to save file: {str(e)}", "danger")
+        if not allowed_file(file.filename):
+            flash(f"File type for {file_type} not allowed.", "danger")
+            return redirect(url_for("main_routes.admin_dashboard"))
+
+        # Save to static/uploads/category/slug/file_type/
+        upload_folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], category, slug, file_type)
+        os.makedirs(upload_folder_path, exist_ok=True)
+        
+        filename = secure_filename(file.filename)
+        file_path_full = os.path.join(upload_folder_path, filename)
+        
+        try:
+            file.save(file_path_full)
+            relative_path_for_db = os.path.join(current_app.config['UPLOAD_FOLDER'], category, slug, file_type, filename).replace(os.sep, '/')
+            
+            if file_type == "image":
+                item.image_path = relative_path_for_db
+            elif file_type == "video":
+                item.video_path = relative_path_for_db
+            elif file_type == "circuitdiagram":
+                item.circuit_diagram_path = relative_path_for_db
+            
+            db.session.commit()
+            flash(f"{file_type.capitalize()} uploaded and saved for '{item_name}'.", "success")
+
+        except Exception as e:
+            flash(f"Failed to save {file_type} file: {str(e)}", "danger")
+
+    # Handle text content (code, description, connections, procedure)
+    elif file_type in {"code", "description", "connections", "procedure"}:
+        # Check if text content is directly provided via a textarea (assuming this)
+        content = request.form.get("text_content") # New form field for text content
+        if not content:
+            flash(f"No text content provided for {file_type}.", "warning")
+            return redirect(url_for("main_routes.admin_dashboard"))
+        
+        try:
+            setattr(item, file_type, content) # Directly set the content to the model field
+            db.session.commit()
+            flash(f"{file_type.capitalize()} content saved for '{item_name}'.", "success")
+        except Exception as e:
+            flash(f"Failed to save {file_type} content: {str(e)}", "danger")
+    else:
+        flash("Unknown file type or content type.", "warning")
+
+    return redirect(url_for("main_routes.admin_dashboard"))
+
+@main_routes.route("/admin/delete_item/<category>/<int:item_id>", methods=["POST"])
+@login_required
+def delete_item(category, item_id):
+    if not current_user.is_admin:
+        flash("Access denied: Admins only.", "danger")
+        return redirect(url_for("main_routes.home"))
+
+    item = None
+    if category == 'projects':
+        item = Project.query.get(item_id)
+    elif category == 'testing':
+        item = Testing.query.get(item_id)
+
+    if not item:
+        flash("Item not found.", "danger")
         return redirect(url_for("main_routes.admin_dashboard"))
 
-    relative_path = f"uploads/{category}/{slug}/{file_type}/{filename}"
+    try:
+        # Delete associated files from the filesystem
+        # Construct the base directory for the item's uploads
+        item_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], category, item.slug)
+        if os.path.exists(item_upload_dir):
+            import shutil
+            shutil.rmtree(item_upload_dir) # Remove the entire directory for the item's uploads
+            current_app.logger.info(f"Deleted directory: {item_upload_dir}")
 
-    # Safely update model fields
-    if file_type == "image":
-        item.image_path = relative_path
-    elif file_type == "video":
-        item.video_path = relative_path
-    elif file_type == "circuitdiagram":
-        item.circuit_diagram = relative_path
-    elif file_type in {"code", "description", "connections", "procedure"}:
-        try:
-            with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
-            setattr(item, file_type, content)
-        except Exception as e:
-            flash(f"Failed to read {file_type} file: {str(e)}", "danger")
-            return redirect(url_for("main_routes.admin_dashboard"))
-    else:
-        flash("Unknown file type.", "warning")
-
-    db.session.commit()
-    flash(f"{file_type.capitalize()} uploaded and saved for '{item_name}'.", "success")
+        db.session.delete(item)
+        db.session.commit()
+        flash(f"{category.capitalize()} '{item.title}' deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting {category} '{item.title}': {str(e)}", "danger")
+    
     return redirect(url_for("main_routes.admin_dashboard"))
+
 
 @main_routes.route("/profile")
 @login_required
@@ -235,7 +298,7 @@ def profile():
     return render_template(
         "profile.html",
         user=current_user,
-        project_history=current_user.project_views if hasattr(current_user, "project_views") else []
+        # project_history=current_user.project_views if hasattr(current_user, "project_views") else [] # Uncomment if ProjectView is used
     )
 
 @main_routes.route("/profile/upload_photo", methods=["POST"])
@@ -248,13 +311,13 @@ def upload_profile_photo():
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         unique_filename = f"{current_user.id}_{timestamp}_{filename}"
 
-        upload_folder = os.path.join(current_app.root_path, "static", "uploads", "profile_photos")
+        upload_folder = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'], "profile_photos")
         os.makedirs(upload_folder, exist_ok=True)
 
         file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
 
-        current_user.profile_photo = f"uploads/profile_photos/{unique_filename}"
+        current_user.profile_photo = os.path.join(current_app.config['UPLOAD_FOLDER'], "profile_photos", unique_filename).replace(os.sep, '/')
         db.session.commit()
 
         flash("Profile photo updated successfully.", "success")
@@ -277,4 +340,5 @@ def not_found_error(error):
 
 @main_routes.app_errorhandler(500)
 def internal_error(error):
+    db.session.rollback() # Rollback in case of database errors
     return render_template("500.html"), 500
