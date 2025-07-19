@@ -1,80 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Testing: {{ item_name }} - Harsha Projects{% endblock %}
+{% block title %}Testing: {{ item.title }} - Harsha Projects{% endblock %}
 
 {% block content %}
 
-<h2>Testing: {{ item_name }}</h2>
+<h2>Testing: {{ item.title }}</h2>
 <a href="{{ url_for('main_routes.testing') }}">← Back to Testing List</a>
 
-<!-- Description -->
-{% if description_files %}
-    <h3>Description</h3>
-    <ul>
-        {% for file in description_files %}
-            <li>
-              <a href="{{ url_for('static', filename=file) }}" target="_blank" rel="noopener noreferrer">
-                {{ file.split('/')[-1] }}
-              </a>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No description files uploaded.</p>
-{% endif %}
+<div class="item-detail-container">
+    {% if item.description %}
+        <h3>Description</h3>
+        <div class="content-block">
+            {{ item.description|nl2br }}
+        </div>
+    {% else %}
+        <p>No description available.</p>
+    {% endif %}
 
-<!-- Images -->
-{% if image_files %}
-    <h3>Images</h3>
-    <div class="image-gallery" style="display:flex; flex-wrap:wrap; gap:10px;">
-        {% for image in image_files %}
-            <img src="{{ url_for('static', filename=image) }}" alt="Testing image {{ loop.index }}" width="300" style="border: 1px solid #ccc; border-radius: 4px;">
-        {% endfor %}
-    </div>
-{% else %}
-    <p>No images uploaded.</p>
-{% endif %}
+    {% if image_url %}
+        <h3>Image</h3>
+        <div class="image-gallery">
+            <img src="{{ image_url }}" alt="Testing image" class="img-fluid">
+        </div>
+    {% else %}
+        <p>No image uploaded.</p>
+    {% endif %}
 
-<!-- Videos -->
-{% if video_files %}
-    <h3>Videos</h3>
-    <div class="video-gallery" style="display:flex; flex-wrap:wrap; gap:10px;">
-        {% for video in video_files %}
-            <video width="400" controls style="border: 1px solid #ccc; border-radius: 4px;">
-                <source src="{{ url_for('static', filename=video) }}" type="video/mp4">
+    {% if video_url %}
+        <h3>Video</h3>
+        <div class="video-gallery">
+            <video controls class="img-fluid">
+                <source src="{{ video_url }}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
-        {% endfor %}
-    </div>
-{% else %}
-    <p>No videos uploaded.</p>
-{% endif %}
+        </div>
+    {% else %}
+        <p>No video uploaded.</p>
+    {% endif %}
 
-<!-- Code Files -->
-{% if code_files %}
-    <h3>Code Files</h3>
-    <ul>
-        {% for code in code_files %}
-            <li>
-              <a href="{{ url_for('static', filename=code) }}" target="_blank" rel="noopener noreferrer">
-                {{ code.split('/')[-1] }}
-              </a>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No code files uploaded.</p>
-{% endif %}
+    {% if item.code %}
+        <h3>Code</h3>
+        <div class="code-block">
+            <pre><code>{{ item.code }}</code></pre>
+            <button class="btn btn-secondary btn-sm copy-btn" onclick="copyToClipboard(this)">Copy Code</button>
+        </div>
+    {% else %}
+        <p>No code available.</p>
+    {% endif %}
 
-<!-- Circuit Diagrams -->
-{% if circuit_files %}
-    <h3>Circuit Diagrams</h3>
-    <div class="circuit-gallery" style="display:flex; flex-wrap:wrap; gap:10px;">
-        {% for circuit in circuit_files %}
-            <img src="{{ url_for('static', filename=circuit) }}" alt="Circuit diagram {{ loop.index }}" width="300" style="border: 1px solid #ccc; border-radius: 4px;">
-        {% endfor %}
-    </div>
-{% else %}
-    <p>No circuit diagrams uploaded.</p>
-{% endif %}
+    {% if circuit_diagram_url %}
+        <h3>Circuit Diagram</h3>
+        <div class="circuit-gallery">
+            <img src="{{ circuit_diagram_url }}" alt="Circuit diagram" class="img-fluid">
+        </div>
+    {% else %}
+        <p>No circuit diagram uploaded.</p>
+    {% endif %}
+
+    {% if item.connections %}
+        <h3>Connections</h3>
+        <div class="content-block">
+            {{ item.connections|nl2br }}
+        </div>
+    {% else %}
+        <p>No connections information available.</p>
+    {% endif %}
+
+    {% if item.procedure %}
+        <h3>Procedure</h3>
+        <div class="content-block">
+            {{ item.procedure|nl2br }}
+        </div>
+    {% else %}
+        <p>No procedure available.</p>
+    {% endif %}
+</div>
 
 {% endblock %}
