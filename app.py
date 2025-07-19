@@ -1,5 +1,5 @@
 import os
-from application import app, db  # ✅ fixed circular import
+from app_init import app, db  # ✅ Import from app_init instead of application
 from models import User
 from werkzeug.security import generate_password_hash
 
@@ -26,6 +26,7 @@ with app.app_context():
         db.session.add(admin_user)
         db.session.commit()
         print("✅ Admin user added (username: admin, password: admin)")
+
 
 
 
