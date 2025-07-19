@@ -1,5 +1,5 @@
 from app_init import app  # ✅ Import app instance from app_init
-import routes             # ✅ Ensure routes are registered
+import routes             # ✅ Ensure routes are registered (this is handled by app_init now)
 import jinja_filters      # ✅ Ensure Jinja filters are loaded
 
 if __name__ == "__main__":
