@@ -1,75 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Profile</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-image: url("{{ url_for('static', filename='images/background.jpg') }}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            font-family: Arial, sans-serif;
-            color: #fff;
-        }
+{% extends 'base.html' %} {# Ensure this extends base.html if it's not already #}
 
-        .profile-wrapper {
-            background-color: rgba(0, 0, 0, 0.6); /* Dark overlay for readability */
-            padding: 40px;
-            border-radius: 12px;
-            margin: 50px auto;
-            width: 80%;
-            max-width: 1000px;
-        }
+{% block title %}User Profile{% endblock %}
 
-        .profile-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        .left-section, .right-section {
-            width: 48%;
-        }
-
-        .right-section img {
-            display: block;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            border: 2px solid #fff;
-        }
-
-        .history-section {
-            margin-top: 40px;
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        label, input, button {
-            display: block;
-            margin-top: 10px;
-        }
-
-        input, button {
-            padding: 6px;
-            width: 100%;
-        }
-
-        ul {
-            list-style: disc;
-            padding-left: 20px;
-        }
-    </style>
-</head>
-<body>
-
+{% block content %}
 <div class="profile-wrapper">
     <div class="profile-container">
-        <!-- LEFT: User Info -->
         <div class="left-section">
             <h2>User Profile</h2>
             <p><strong>Username:</strong> {{ user.username }}</p>
@@ -77,7 +12,6 @@
             <p><strong>About:</strong> {{ user.about or "No description provided." }}</p>
         </div>
 
-        <!-- RIGHT: Profile Photo & Upload -->
         <div class="right-section">
             {% if user.profile_photo %}
                 <img src="{{ url_for('static', filename=user.profile_photo) }}" alt="Profile Photo" width="150">
@@ -93,13 +27,21 @@
         </div>
     </div>
 
-    <!-- BELOW: Project History -->
     <div class="history-section">
         <h3>History</h3>
-        {% if user.project_history %}
+        {% if project_history %} {# Use the passed project_history variable #}
             <ul>
-                {% for project in user.project_history %}
-                    <li>{{ project.name }} — viewed on {{ project.viewed_at.strftime('%Y-%m-%d %H:%M') }}</li>
+                {% for project in project_history %}
+                    <li>
+                        {% if project.item_type == 'project' %}
+                            <a href="{{ url_for('main_routes.project_detail', slug=project.item.slug) }}">{{ project.item.title }}</a>
+                        {% elif project.item_type == 'testing' %}
+                             <a href="{{ url_for('main_routes.testing_detail', slug=project.item.slug) }}">{{ project.item.title }}</a>
+                        {% else %}
+                            {{ project.item.title }}
+                        {% endif %}
+                        — viewed on {{ project.viewed_at|format_date("%Y-%m-%d %H:%M") }}
+                    </li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -108,5 +50,53 @@
     </div>
 </div>
 
-</body>
-</html>
+{# Move styling to static/css/style.css or keep if specific to this page only #}
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background-image: url("{{ url_for('static', filename='images/background.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: Arial, sans-serif;
+    color: #fff;
+}
+
+.profile-wrapper {
+    background-color: rgba(0, 0, 0, 0.6); /* Dark overlay for readability */
+    padding: 40px;
+    border-radius: 12px;
+    margin: 50px auto;
+    width: 80%;
+    max-width: 1000px;
+}
+
+.profile-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    color: var(--text-on-dark); /* Ensure text color is appropriate */
+}
+
+.left-section, .right-section {
+    width: 48%;
+}
+
+.right-section img {
+    display: block;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    border: 2px solid #fff;
+}
+
+.history-section {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.4); /* Dark overlay for readability */
+    border-radius: 8px;
+    color: var(--text-on-dark); /* Ensure text color is appropriate */
+}
+</style>
+{% endblock %}
