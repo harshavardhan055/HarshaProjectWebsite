@@ -1,14 +1,17 @@
 import os
 
-# Secret key for session management (IMPORTANT: Change this to a strong, random value in production)
-SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess-this-secret-key'
+# A strong, random secret key for Flask sessions and security
+# IMPORTANT: In a production environment, this should be set via environment variables
+# For Render, you can set it as an environment variable in the service settings.
+# Example: SECRET_KEY = os.environ.get('SECRET_KEY', 'your_super_secret_key_that_you_change_for_production')
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'a_very_secret_and_random_string_here_change_me_in_production'
 
 # Database configuration
-SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-    'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'harsha_projects.db')
+# For SQLite, the path will be relative to the application's root path on Render
+SQLALCHEMY_DATABASE_URI = 'sqlite:///harsha_projects.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# File upload configuration
-UPLOAD_FOLDER = os.path.join('static', 'uploads') # Files will be saved in the static/uploads directory
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino', 'txt', 'zip', 'rar'} # Added zip, rar for code/description zips
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB limit for uploads
+# Upload folder configuration (relative to static directory)
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino', 'txt'}
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024 # 16 MB limit
