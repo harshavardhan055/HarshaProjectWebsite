@@ -232,24 +232,44 @@ def upload_file():
 @main_routes.route("/profile")
 @login_required
 def profile():
-    return render_template("profile.html", user=current_user)
+    project_views = current_user.project_views  # assumes a relationship in User model
+    return render_template(
+        "profile.html",
+        user=current_user,
+        project_history=project_views
+    )
+
+from datetime import datetime
 
 @main_routes.route("/profile/upload_photo", methods=["POST"])
 @login_required
 def upload_profile_photo():
     file = request.files.get("photo")
+    
     if file and allowed_file(file.filename):
+        # Ensure secure and unique filename
         filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{current_user.id}_{timestamp}_{filename}"
+        
+        # Define upload folder path
         upload_folder = os.path.join(current_app.root_path, "static", "uploads", "profile_photos")
         os.makedirs(upload_folder, exist_ok=True)
-        file_path = os.path.join(upload_folder, filename)
+        
+        # Save the file
+        file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
-        current_user.profile_photo = f"uploads/profile_photos/{filename}"
+
+        # Update user profile photo path in DB
+        current_user.profile_photo = f"uploads/profile_photos/{unique_filename}"
         db.session.commit()
-        flash("Profile photo updated.", "success")
+
+        flash("Profile photo updated successfully.", "success")
     else:
         flash("Invalid file or no file selected.", "danger")
+
     return redirect(url_for("main_routes.profile"))
+
 
 @main_routes.route("/contact")
 def contact():
