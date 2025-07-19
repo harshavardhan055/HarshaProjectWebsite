@@ -3,13 +3,26 @@
 {% block content %}
 <div class="form-wrapper">
     <h2>Login</h2>
-    <form method="POST" class="login-form">
-        <input type="text" name="username" placeholder="Username" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <button type="submit">Login</button>
+    {# Use Flask-WTF forms for better handling, if implemented. For direct HTML, ensure method and action are correct. #}
+    <form method="POST" action="{{ url_for('auth_routes.login') }}" class="login-form needs-validation" novalidate>
+        <div class="mb-3">
+            <input type="text" name="username" class="form-control" placeholder="Username" required>
+            <div class="invalid-feedback">Please enter your username.</div>
+        </div>
+        <div class="mb-3">
+            <input type="password" name="password" class="form-control" placeholder="Password" required>
+            <div class="invalid-feedback">Please enter your password.</div>
+        </div>
+        {# Add remember me checkbox if your form supports it #}
+        {# <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+            <label class="form-check-label" for="rememberMe">Remember Me</label>
+        </div> #}
+        <button type="submit" class="btn btn-primary">Login</button>
     </form>
 </div>
 
+{# Move styling to static/css/style.css or keep if specific to this page only #}
 <style>
 /* Fix stacking so form is clickable */
 .form-wrapper {
@@ -22,6 +35,7 @@
     margin-top: 100px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    color: var(--text-on-light); /* Ensure text is visible in light background */
 }
 
 /* Optional: Full-page background */
@@ -31,7 +45,7 @@ body::before {
     top: 0; left: 0;
     width: 100vw;
     height: 100vh;
-    background-image: url('/static/images/bg.jpg'); /* your bg image path */
+    background-image: url('{{ url_for("static", filename="images/background.jpg") }}'); /* your bg image path */
     background-size: cover;
     background-position: center;
     z-index: 1;
