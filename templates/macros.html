@@ -8,16 +8,16 @@
         {% endif %}
         <div class="card-body">
             <h5 class="card-title">{{ item.title }}</h5>
-            <p class="card-text">{{ item.description|truncate(150) }}</p>
+            {# Use nl2br for description in case it has newlines #}
+            <p class="card-text">{{ item.description|nl2br|truncate(150) }}</p>
         </div>
         <div class="card-footer bg-transparent border-0">
             {% if item_type == 'project' %}
-                <a href="{{ url_for('main_routes.project_detail', project_id=item.id) }}" class="btn btn-primary">View Details</a>
+                <a href="{{ url_for('main_routes.project_detail', slug=item.slug) }}" class="btn btn-primary">View Details</a>
             {% elif item_type == 'testing' %}
-                <a href="{{ url_for('main_routes.testing_detail', testing_id=item.id) }}" class="btn btn-primary">View Details</a>
+                <a href="{{ url_for('main_routes.testing_detail', slug=item.slug) }}" class="btn btn-primary">View Details</a>
             {% endif %}
         </div>
     </div>
 </div>
 {% endmacro %}
-
