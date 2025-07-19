@@ -42,5 +42,16 @@ class Testing(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150))
+    email = db.Column(db.String(150))
+    about = db.Column(db.Text)  # new field
+    profile_photo = db.Column(db.String(300))  # path to profile image
+
+    # Assume project history is tracked via another table or a relationship
+    project_views = db.relationship('ProjectView', backref='user', lazy=True)
+
+
 
 
