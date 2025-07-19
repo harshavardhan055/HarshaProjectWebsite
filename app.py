@@ -19,7 +19,7 @@ with app.app_context():
     if not User.query.filter_by(username="admin").first():
         admin_user = User(
             username="admin",
-            email="admin@example.com",
+            email="mastertechnical193@gmail.com",
             password_hash=generate_password_hash("admin"),
             is_admin=True
         )
