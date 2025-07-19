@@ -10,8 +10,14 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Optional fields from second definition
+    about = db.Column(db.Text)
+    profile_photo = db.Column(db.String(300))
+
+    # Relationships
     projects = db.relationship("Project", backref="owner", lazy=True)
     testings = db.relationship("Testing", backref="owner", lazy=True)
+    project_views = db.relationship("ProjectView", backref="user", lazy=True)  # If defined elsewhere
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -19,12 +25,12 @@ class Project(db.Model):
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Uploaded file paths (stored as strings)
+    # Uploaded file paths
     image_filename = db.Column(db.String(255))
     code_filename = db.Column(db.String(255))
     video_filename = db.Column(db.String(255))
     diagram_filename = db.Column(db.String(255))
-    text_filename = db.Column(db.String(255))  # project info / procedure text
+    text_filename = db.Column(db.String(255))
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
@@ -38,19 +44,17 @@ class Testing(db.Model):
     code_filename = db.Column(db.String(255))
     video_filename = db.Column(db.String(255))
     diagram_filename = db.Column(db.String(255))
-    text_filename = db.Column(db.String(255))  # testing notes / result summary
+    text_filename = db.Column(db.String(255))
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150))
-    email = db.Column(db.String(150))
-    about = db.Column(db.Text)  # new field
-    profile_photo = db.Column(db.String(300))  # path to profile image
+# Optional: define ProjectView only if needed
+# class ProjectView(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Assume project history is tracked via another table or a relationship
-    project_views = db.relationship('ProjectView', backref='user', lazy=True)
 
 
 
