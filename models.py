@@ -1,4 +1,4 @@
-from app import db
+from app_init import db # Import db from app_init
 from flask_login import UserMixin
 from datetime import datetime
 
@@ -10,45 +10,52 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Optional fields from second definition
     about = db.Column(db.Text)
     profile_photo = db.Column(db.String(300))
 
-    # Relationships
     projects = db.relationship("Project", backref="owner", lazy=True)
     testings = db.relationship("Testing", backref="owner", lazy=True)
-    project_views = db.relationship("ProjectView", backref="user", lazy=True)  # If defined elsewhere
+    # project_views = db.relationship("ProjectView", backref="user", lazy=True) # Uncomment if ProjectView is used
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
-    description = db.Column(db.Text)
+    slug = db.Column(db.String(150), unique=True, nullable=False) # Added slug for unique URLs
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Uploaded file paths
-    image_filename = db.Column(db.String(255))
-    code_filename = db.Column(db.String(255))
-    video_filename = db.Column(db.String(255))
-    diagram_filename = db.Column(db.String(255))
-    text_filename = db.Column(db.String(255))
+    # Paths to uploaded files
+    image_path = db.Column(db.String(255))
+    video_path = db.Column(db.String(255))
+    circuit_diagram_path = db.Column(db.String(255))
+
+    # Text content stored directly in DB
+    description = db.Column(db.Text)
+    code = db.Column(db.Text)
+    connections = db.Column(db.Text)
+    procedure = db.Column(db.Text)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
 class Testing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
-    description = db.Column(db.Text)
+    slug = db.Column(db.String(150), unique=True, nullable=False) # Added slug for unique URLs
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    image_filename = db.Column(db.String(255))
-    code_filename = db.Column(db.String(255))
-    video_filename = db.Column(db.String(255))
-    diagram_filename = db.Column(db.String(255))
-    text_filename = db.Column(db.String(255))
+    # Paths to uploaded files
+    image_path = db.Column(db.String(255))
+    video_path = db.Column(db.String(255))
+    circuit_diagram_path = db.Column(db.String(255))
+
+    # Text content stored directly in DB
+    description = db.Column(db.Text)
+    code = db.Column(db.Text)
+    connections = db.Column(db.Text)
+    procedure = db.Column(db.Text)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-# Optional: define ProjectView only if needed
+# If you intend to use ProjectView, uncomment and define it:
 # class ProjectView(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
