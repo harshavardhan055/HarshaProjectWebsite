@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 from flask import (
     Blueprint, render_template, redirect, url_for,
     request, flash, current_app
@@ -13,7 +14,6 @@ main_routes = Blueprint("main_routes", __name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'pdf', 'py', 'c', 'ino', 'txt'}
 
-# ✅ Local custom slugify function
 def custom_slugify(text):
     text = text.lower()
     text = re.sub(r'[^\w\s-]', '', text)
@@ -38,7 +38,6 @@ def login():
             return redirect(url_for("main_routes.login"))
 
         user = User.query.filter_by(username=username).first()
-
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
             flash("Logged in successfully.", "success")
@@ -208,6 +207,7 @@ def upload_file():
 
     relative_path = f"uploads/{category}/{slug}/{file_type}/{filename}"
 
+    # Safely update model fields
     if file_type == "image":
         item.image_path = relative_path
     elif file_type == "video":
@@ -232,35 +232,28 @@ def upload_file():
 @main_routes.route("/profile")
 @login_required
 def profile():
-    project_views = current_user.project_views  # assumes a relationship in User model
     return render_template(
         "profile.html",
         user=current_user,
-        project_history=project_views
+        project_history=current_user.project_views if hasattr(current_user, "project_views") else []
     )
-
-from datetime import datetime
 
 @main_routes.route("/profile/upload_photo", methods=["POST"])
 @login_required
 def upload_profile_photo():
     file = request.files.get("photo")
-    
+
     if file and allowed_file(file.filename):
-        # Ensure secure and unique filename
         filename = secure_filename(file.filename)
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         unique_filename = f"{current_user.id}_{timestamp}_{filename}"
-        
-        # Define upload folder path
+
         upload_folder = os.path.join(current_app.root_path, "static", "uploads", "profile_photos")
         os.makedirs(upload_folder, exist_ok=True)
-        
-        # Save the file
+
         file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
 
-        # Update user profile photo path in DB
         current_user.profile_photo = f"uploads/profile_photos/{unique_filename}"
         db.session.commit()
 
@@ -269,7 +262,6 @@ def upload_profile_photo():
         flash("Invalid file or no file selected.", "danger")
 
     return redirect(url_for("main_routes.profile"))
-
 
 @main_routes.route("/contact")
 def contact():
@@ -286,4 +278,3 @@ def not_found_error(error):
 @main_routes.app_errorhandler(500)
 def internal_error(error):
     return render_template("500.html"), 500
-
