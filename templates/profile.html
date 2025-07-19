@@ -1,16 +1,112 @@
-<h2>User Profile</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-image: url("{{ url_for('static', filename='images/background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
 
-<p>Username: {{ user.username }}</p>
-<p>Email: {{ user.email }}</p>
+        .profile-wrapper {
+            background-color: rgba(0, 0, 0, 0.6); /* Dark overlay for readability */
+            padding: 40px;
+            border-radius: 12px;
+            margin: 50px auto;
+            width: 80%;
+            max-width: 1000px;
+        }
 
-{% if user.profile_photo %}
-    <img src="{{ url_for('static', filename=user.profile_photo) }}" alt="Profile Photo" width="150">
-{% else %}
-    <p>No profile photo uploaded yet.</p>
-{% endif %}
+        .profile-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
 
-<form action="{{ url_for('main_routes.upload_profile_photo') }}" method="post" enctype="multipart/form-data">
-    <label for="photo">Upload Profile Photo:</label>
-    <input type="file" name="photo" id="photo" accept="image/*" required>
-    <button type="submit">Upload</button>
-</form>
+        .left-section, .right-section {
+            width: 48%;
+        }
+
+        .right-section img {
+            display: block;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+        }
+
+        .history-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        label, input, button {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input, button {
+            padding: 6px;
+            width: 100%;
+        }
+
+        ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="profile-wrapper">
+    <div class="profile-container">
+        <!-- LEFT: User Info -->
+        <div class="left-section">
+            <h2>User Profile</h2>
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>About:</strong> {{ user.about or "No description provided." }}</p>
+        </div>
+
+        <!-- RIGHT: Profile Photo & Upload -->
+        <div class="right-section">
+            {% if user.profile_photo %}
+                <img src="{{ url_for('static', filename=user.profile_photo) }}" alt="Profile Photo" width="150">
+            {% else %}
+                <p>No profile photo uploaded yet.</p>
+            {% endif %}
+
+            <form action="{{ url_for('main_routes.upload_profile_photo') }}" method="post" enctype="multipart/form-data">
+                <label for="photo">Upload Profile Photo:</label>
+                <input type="file" name="photo" id="photo" accept="image/*" required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- BELOW: Project History -->
+    <div class="history-section">
+        <h3>History</h3>
+        {% if user.project_history %}
+            <ul>
+                {% for project in user.project_history %}
+                    <li>{{ project.name }} — viewed on {{ project.viewed_at.strftime('%Y-%m-%d %H:%M') }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No project history found.</p>
+        {% endif %}
+    </div>
+</div>
+
+</body>
+</html>
