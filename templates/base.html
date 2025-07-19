@@ -95,9 +95,9 @@
             {% if current_user.is_admin %}
                 <a href="{{ url_for('admin_routes.dashboard') }}">Admin Dashboard</a>
             {% endif %}
-            <a href="{{ url_for('auth_routes.logout') }}">Logout</a>
+            <a href="{{ url_for('main_routes.logout') }}">Logout</a> {# CORRECTED: Changed from auth_routes.logout #}
         {% else %}
-            <a href="{{ url_for('auth_routes.login') }}">Login</a>
+            <a href="{{ url_for('main_routes.login') }}">Login</a> {# CORRECTED: Changed from auth_routes.login #}
         {% endif %}
 
         <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
@@ -110,23 +110,4 @@
                     <div class="flash flash-{{ category }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
-    </div>
-
-    <script>
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-        }
-
-        window.onload = function () {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-mode');
-            }
-        };
-    </script>
-</body>
-</html>
+        {% end
