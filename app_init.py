@@ -1,8 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///harsha_projects.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app = Flask(__name__, instance_relative_config=True)
+app.config.from_pyfile("config.py", silent=True)
 
 db = SQLAlchemy(app)
+
+from models import *  # Make sure models are imported
