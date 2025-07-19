@@ -1,5 +1,5 @@
 import os
-from app import app, db
+from application import app, db  # ✅ fixed circular import
 from models import User
 from werkzeug.security import generate_password_hash
 
