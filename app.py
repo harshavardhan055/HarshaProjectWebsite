@@ -6,22 +6,25 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
+from werkzeug.security import generate_password_hash
 
-# Set up logging
+# ========== Logging Setup ==========
 logging.basicConfig(level=logging.DEBUG)
 
+# ========== Database Base ==========
 class Base(DeclarativeBase):
     pass
 
-
 db = SQLAlchemy(model_class=Base)
-# create the app
+
+# ========== App Configuration ==========
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
-# configure the database
-# Use SQLite for now to preview the website
+# Fix proxy headers if using HTTPS reverse proxy like Render
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# ========== Database Configuration ==========
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///harsha_projects.db"
 app.logger.info("Using SQLite database for preview")
 
@@ -30,35 +33,33 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max file upload
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload size
 
-# File upload config
+# ========== File Upload Configuration ==========
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
 app.config["ALLOWED_EXTENSIONS"] = {"txt", "pdf", "png", "jpg", "jpeg", "gif", "svg", "mp4"}
 
-# Ensure upload directory exists
+# Ensure upload folder exists
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-# Initialize extensions
+# ========== Initialize Extensions ==========
 db.init_app(app)
 
-# Setup Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message = "Please log in to access this page."
 login_manager.login_message_category = "info"
 
+# ========== Application Context ==========
 with app.app_context():
-    import models  # noqa: F401
+    import models  # Make sure models.py exists
     db.create_all()
 
     # Create admin user if it doesn't exist
     from models import User
-    from werkzeug.security import generate_password_hash
-    
-    admin_user = User.query.filter_by(username="admin").first()
-    if not admin_user:
+
+    if not User.query.filter_by(username="admin").first():
         admin_user = User(
             username="admin",
             email="admin@example.com",
@@ -69,6 +70,7 @@ with app.app_context():
         db.session.commit()
         app.logger.info("Admin user created")
 
+# ========== Login Manager Callback ==========
 @login_manager.user_loader
 def load_user(user_id):
     from models import User
