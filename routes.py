@@ -7,6 +7,12 @@ from app import app, db
 from models import Project, Contact, SocialMediaLinks
 from forms import ProjectForm, SocialMediaForm
 from utils import save_uploaded_file, delete_file
+from datetime import datetime
+
+@app.route("/")
+def home():
+    return render_template("home.html", current_year=datetime.now().year)
+
 @app.context_processor
 def inject_social_media():
     """Make social media links available in all templates"""
