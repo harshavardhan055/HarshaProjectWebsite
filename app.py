@@ -1,86 +1,95 @@
+# app.py
 import os
-import logging
-from flask import Flask
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
-from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_login import LoginManager
-from werkzeug.security import generate_password_hash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_migrate import Migrate
+from werkzeug.utils import secure_filename
+import logging
 
-# ========== Logging Setup ==========
-logging.basicConfig(level=logging.DEBUG)
-
-# ========== SQLAlchemy Base Class ==========
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
-
-# ========== Flask App Configuration ==========
+# Flask App and Config
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+app.config.from_object('config.Config')
 
-# Proxy fix for deployment platforms like Render
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# ========== Database Configuration ==========
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///harsha_projects.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit
+# Database
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-# ========== File Upload Configuration ==========
-app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
-app.config["ALLOWED_EXTENSIONS"] = {"txt", "pdf", "png", "jpg", "jpeg", "gif", "svg", "mp4"}
+# Login Manager
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
 
-# Create the upload directory if it doesn't exist
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+# Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('app')
+logger.info("\u2705 Admin user created.")
 
-# ========== Initialize SQLAlchemy ==========
-db.init_app(app)
+# Import models
+from models import *
 
-# ========== Flask-Login Setup ==========
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-login_manager.login_message = "Please log in to access this page."
-login_manager.login_message_category = "info"
-
-# ========== Load User Model & Create Admin ==========
-with app.app_context():
-    from models import User  # Make sure models.py defines User
-
-    # Create tables
-    db.create_all()
-
-    # Create admin user if not already exists
-    if not User.query.filter_by(username="admin").first():
-        admin_user = User(
-            username="admin",
-            email="technicalmaster193@gmail.com",  # ✅ Replace with your Gmail
-            password_hash=generate_password_hash("admin"),  # ⚠️ Replace with strong password in production
-            is_admin=True
-        )
-        db.session.add(admin_user)
-        db.session.commit()
-        app.logger.info("✅ Admin user created.")
-
-# ========== Flask-Login User Loader ==========
+# User loader
 @login_manager.user_loader
 def load_user(user_id):
-    from models import User
     return User.query.get(int(user_id))
 
-# ========== Import Routes ==========
-# Assuming you have a file named routes.py or a routes folder with __init__.py
-try:
-    import routes
-except ImportError:
-    app.logger.warning("⚠️ No routes.py found. Add your routes or blueprint.")
+# Routes
+@app.route('/')
+def home():
+    return render_template('home.html')
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid credentials', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html', user=current_user)
+
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'danger')
+            return redirect(request.url)
+        if file:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            flash('File uploaded successfully!', 'success')
+            return redirect(url_for('dashboard'))
+    return render_template('upload.html')
+
+@app.route('/uploads/<filename>')
+@login_required
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
