@@ -1,5 +1,5 @@
 from datetime import datetime
-from app_init import app # Changed import from app to app_init
+from app import app
 
 @app.template_filter('now')
 def filter_now(format_string):
@@ -29,8 +29,8 @@ def filter_nl2br(text):
         return ""
     return text.replace('\n', '<br>')
 
-# Register the filters with Flask (already registered via decorator, but can keep these for clarity)
-# app.jinja_env.filters['now'] = filter_now
-# app.jinja_env.filters['format_date'] = filter_format_date
-# app.jinja_env.filters['truncate_html'] = filter_truncate_html
-# app.jinja_env.filters['nl2br'] = filter_nl2br
+# Register the filters with Flask
+app.jinja_env.filters['now'] = filter_now
+app.jinja_env.filters['format_date'] = filter_format_date
+app.jinja_env.filters['truncate_html'] = filter_truncate_html
+app.jinja_env.filters['nl2br'] = filter_nl2br

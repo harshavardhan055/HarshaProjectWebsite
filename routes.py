@@ -1,349 +1,575 @@
 import os
-import re
-from datetime import datetime
-from flask import (
-    Blueprint, render_template, redirect, url_for,
-    request, flash, current_app, send_from_directory
-)
-from flask_login import login_user, logout_user, login_required, current_user
-from models import User, db, Project, Testing # Import db from app_init, not app
+from flask import render_template, flash, redirect, url_for, request, abort, current_app, session
+from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
-from utils import allowed_file, save_uploaded_file, delete_file # Import from utils
+from sqlalchemy import or_
+from app import app, db
+from models import User, Project, Testing, EmailVerification, ProjectComment, ProjectRating, SocialMediaLinks
+from forms import LoginForm, RegistrationForm, ProjectForm, TestingForm, EmailVerificationForm, SearchForm, ProfileForm, CommentForm, RatingForm, SocialMediaForm
+from utils import save_uploaded_file, delete_file, is_admin_ip
+from email_utils import create_verification_record, verify_otp
 
-main_routes = Blueprint("main_routes", __name__)
+@app.context_processor
+def inject_social_media():
+    """Make social media links available in all templates"""
+    social_media = SocialMediaLinks.query.first()
+    return dict(social_media=social_media)
 
-# ALLOWED_EXTENSIONS is now read from app.config (defined in config.py)
+@app.route('/')
+def index():
+    # Get 3 featured projects for the homepage
+    featured_projects = Project.query.order_by(Project.created_at.desc()).limit(3).all()
+    return render_template('home.html', featured_projects=featured_projects)
 
-def custom_slugify(text):
-    text = text.lower()
-    text = re.sub(r'[^\w\s-]', '', text)
-    text = re.sub(r'[-\s]+', '-', text)
-    return text.strip('-')
-
-@main_routes.route("/about")
-def about():
-    """Render the about page."""
-    return render_template("about.html", title="About Harsha's Projects")
-
-@main_routes.route("/")
-def home():
-    return render_template("index.html")
-
-@main_routes.route("/login", methods=["GET", "POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Redirect if user is already logged in
     if current_user.is_authenticated:
-        return redirect(url_for("main_routes.home"))
+        return redirect(url_for('index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        
+        if user is None or not check_password_hash(user.password_hash, form.password.data):
+            flash('Invalid username or password', 'danger')
+            return redirect(url_for('login'))
+        
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or not next_page.startswith('/'):
+            next_page = url_for('index')
+        
+        flash('Login successful!', 'success')
+        return redirect(next_page)
+    
+    return render_template('login.html', form=form)
 
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-
-        if not username or not password:
-            flash("Please enter both username and password.", "warning")
-            return redirect(url_for("main_routes.login"))
-
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            flash("Logged in successfully.", "success")
-            return redirect(url_for("main_routes.home"))
-        else:
-            flash("Invalid username or password.", "danger")
-
-    return render_template("login.html")
-
-@main_routes.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("Logged out successfully.", "info")
-    return redirect(url_for("main_routes.home"))
-
-@main_routes.route("/register", methods=["GET", "POST"])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Redirect if user is already logged in
     if current_user.is_authenticated:
-        return redirect(url_for("main_routes.home"))
-
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "").strip()
-        confirm_password = request.form.get("confirm_password", "").strip()
-
-        if not username or not email or not password or not confirm_password:
-            flash("Please fill in all fields.", "warning")
-            return redirect(url_for("main_routes.register"))
-
-        if password != confirm_password:
-            flash("Passwords do not match.", "danger")
-            return redirect(url_for("main_routes.register"))
-
-        existing_user = User.query.filter(
-            (User.username == username) | (User.email == email)
-        ).first()
-
-        if existing_user:
-            flash("Username or email already exists.", "danger")
-            return redirect(url_for("main_routes.register"))
-
-        new_user = User(
-            username=username,
-            email=email,
-            password_hash=generate_password_hash(password),
-            is_admin=False
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        flash("Registration successful. Please log in.", "success")
-        return redirect(url_for("main_routes.login"))
-
-    return render_template("register.html")
-
-@main_routes.route("/projects")
-@login_required
-def projects():
-    query = request.args.get("q", "")
-    projects = Project.query.filter(Project.title.ilike(f"%{query}%")).all()
-    return render_template("projects.html", projects=projects, query=query)
-
-@main_routes.route("/testing")
-@login_required
-def testing():
-    query = request.args.get("q", "")
-    testings = Testing.query.filter(Testing.title.ilike(f"%{query}%")).all()
-    return render_template("testing.html", testings=testings, query=query)
-
-def get_files_for_item_display(item_object, base_upload_folder):
-    """
-    Constructs a dictionary of file paths for display based on item object's stored paths.
-    """
-    files_dict = {
-        "image_files": [],
-        "video_files": [],
-        "code_files": [],
-        "description_files": [],
-        "circuit_files": []
-    }
-
-    if item_object.image_path:
-        files_dict["image_files"].append(url_for('static', filename=item_object.image_path))
-    if item_object.video_path:
-        files_dict["video_files"].append(url_for('static', filename=item_object.video_path))
-    if item_object.circuit_diagram_path:
-        files_dict["circuit_files"].append(url_for('static', filename=item_object.circuit_diagram_path))
-
-    # For text content directly stored in DB, we don't have separate files to list.
-    # The content itself will be passed to the template.
-    return files_dict
-
-@main_routes.route("/projects/<slug>")
-@login_required
-def project_detail(slug):
-    project = Project.query.filter_by(slug=slug).first_or_404()
+        return redirect(url_for('index'))
     
-    # Files are now handled directly via model paths if they are single files
-    # For content (code, description, etc.), the content is directly in the model
-    return render_template(
-        "project_detail.html",
-        item=project, # Pass the whole item object
-        image_url=url_for('static', filename=project.image_path) if project.image_path else None,
-        video_url=url_for('static', filename=project.video_path) if project.video_path else None,
-        circuit_diagram_url=url_for('static', filename=project.circuit_diagram_path) if project.circuit_diagram_path else None
-    )
-
-@main_routes.route("/testing/<slug>")
-@login_required
-def testing_detail(slug):
-    testing_item = Testing.query.filter_by(slug=slug).first_or_404()
-
-    return render_template(
-        "testing_detail.html",
-        item=testing_item, # Pass the whole item object
-        image_url=url_for('static', filename=testing_item.image_path) if testing_item.image_path else None,
-        video_url=url_for('static', filename=testing_item.video_path) if testing_item.video_path else None,
-        circuit_diagram_url=url_for('static', filename=testing_item.circuit_diagram_path) if testing_item.circuit_diagram_path else None
-    )
-
-@main_routes.route("/admin/dashboard")
-@login_required
-def admin_dashboard():
-    if not current_user.is_admin:
-        flash("Access denied: Admins only.", "danger")
-        return redirect(url_for("main_routes.home"))
-    
-    projects = Project.query.all()
-    testings = Testing.query.all()
-    
-    return render_template("admin/dashboard.html", projects=projects, testings=testings)
-
-@main_routes.route("/admin/upload", methods=["POST"])
-@login_required
-def upload_file():
-    if not current_user.is_admin:
-        flash("Access denied: Admins only.", "danger")
-        return redirect(url_for("main_routes.home"))
-
-    item_name = request.form.get("item_name", "").strip()
-    file_type = request.form.get("file_type", "").strip().lower() # e.g., 'image', 'code', 'description'
-    category = request.form.get("category", "").strip().lower() # 'projects' or 'testing'
-
-    if not item_name or not file_type or category not in ['projects', 'testing']:
-        flash("Missing or invalid required fields (Item Name, File Type, Category).", "danger")
-        return redirect(url_for("main_routes.admin_dashboard"))
-
-    slug = custom_slugify(item_name)
-
-    if category == 'projects':
-        item = Project.query.filter_by(slug=slug).first()
-        if not item:
-            item = Project(title=item_name, slug=slug, user_id=current_user.id)
-            db.session.add(item)
-            db.session.commit() # Commit to get an ID for the new item
-    else: # category == 'testing'
-        item = Testing.query.filter_by(slug=slug).first()
-        if not item:
-            item = Testing(title=item_name, slug=slug, user_id=current_user.id)
-            db.session.add(item)
-            db.session.commit() # Commit to get an ID for the new item
-
-    # Handle file uploads (image, video, circuitdiagram)
-    if file_type in {"image", "video", "circuitdiagram"}:
-        file = request.files.get("file")
-        if not file or file.filename == "":
-            flash(f"No file selected for {file_type}.", "warning")
-            return redirect(url_for("main_routes.admin_dashboard"))
-
-        if not allowed_file(file.filename):
-            flash(f"File type for {file_type} not allowed.", "danger")
-            return redirect(url_for("main_routes.admin_dashboard"))
-
-        # Save to static/uploads/category/slug/file_type/
-        upload_folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], category, slug, file_type)
-        os.makedirs(upload_folder_path, exist_ok=True)
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        # Store registration data in session
+        session['registration_data'] = {
+            'username': form.username.data,
+            'email': form.email.data,
+            'password': form.password.data,
+            'interests': ','.join(form.interests.data)
+        }
         
-        filename = secure_filename(file.filename)
-        file_path_full = os.path.join(upload_folder_path, filename)
-        
-        try:
-            file.save(file_path_full)
-            relative_path_for_db = os.path.join(current_app.config['UPLOAD_FOLDER'], category, slug, file_type, filename).replace(os.sep, '/')
-            
-            if file_type == "image":
-                item.image_path = relative_path_for_db
-            elif file_type == "video":
-                item.video_path = relative_path_for_db
-            elif file_type == "circuitdiagram":
-                item.circuit_diagram_path = relative_path_for_db
-            
+        # Send verification email
+        if create_verification_record(form.email.data):
+            flash('Verification code sent to your email. Please check your email and enter the code.', 'info')
+            return redirect(url_for('verify_email'))
+        else:
+            flash('Error sending verification email. Please try again.', 'danger')
+    
+    return render_template('register.html', form=form)
+
+@app.route('/verify-email', methods=['GET', 'POST'])
+def verify_email():
+    if 'registration_data' not in session:
+        flash('No registration data found. Please register again.', 'danger')
+        return redirect(url_for('register'))
+    
+    form = EmailVerificationForm()
+    form.email.data = session['registration_data']['email']
+    
+    if form.validate_on_submit():
+        if verify_otp(form.email.data, form.otp.data):
+            # Create the user account
+            reg_data = session['registration_data']
+            user = User(
+                username=reg_data['username'],
+                email=reg_data['email'],
+                password_hash=generate_password_hash(reg_data['password']),
+                interests=reg_data['interests'],
+                is_verified=True
+            )
+            db.session.add(user)
             db.session.commit()
-            flash(f"{file_type.capitalize()} uploaded and saved for '{item_name}'.", "success")
+            
+            # Clear session data
+            session.pop('registration_data', None)
+            
+            flash('Email verified successfully! You can now log in.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Invalid or expired verification code. Please try again.', 'danger')
+    
+    return render_template('verify_email.html', form=form, email=session['registration_data']['email'])
 
-        except Exception as e:
-            flash(f"Failed to save {file_type} file: {str(e)}", "danger")
-
-    # Handle text content (code, description, connections, procedure)
-    elif file_type in {"code", "description", "connections", "procedure"}:
-        # Check if text content is directly provided via a textarea (assuming this)
-        content = request.form.get("text_content") # New form field for text content
-        if not content:
-            flash(f"No text content provided for {file_type}.", "warning")
-            return redirect(url_for("main_routes.admin_dashboard"))
-        
-        try:
-            setattr(item, file_type, content) # Directly set the content to the model field
-            db.session.commit()
-            flash(f"{file_type.capitalize()} content saved for '{item_name}'.", "success")
-        except Exception as e:
-            flash(f"Failed to save {file_type} content: {str(e)}", "danger")
+@app.route('/resend-verification')
+def resend_verification():
+    if 'registration_data' not in session:
+        flash('No registration data found. Please register again.', 'danger')
+        return redirect(url_for('register'))
+    
+    email = session['registration_data']['email']
+    if create_verification_record(email):
+        flash('Verification code resent to your email.', 'info')
     else:
-        flash("Unknown file type or content type.", "warning")
-
-    return redirect(url_for("main_routes.admin_dashboard"))
-
-@main_routes.route("/admin/delete_item/<category>/<int:item_id>", methods=["POST"])
-@login_required
-def delete_item(category, item_id):
-    if not current_user.is_admin:
-        flash("Access denied: Admins only.", "danger")
-        return redirect(url_for("main_routes.home"))
-
-    item = None
-    if category == 'projects':
-        item = Project.query.get(item_id)
-    elif category == 'testing':
-        item = Testing.query.get(item_id)
-
-    if not item:
-        flash("Item not found.", "danger")
-        return redirect(url_for("main_routes.admin_dashboard"))
-
-    try:
-        # Delete associated files from the filesystem
-        # Construct the base directory for the item's uploads
-        item_upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], category, item.slug)
-        if os.path.exists(item_upload_dir):
-            import shutil
-            shutil.rmtree(item_upload_dir) # Remove the entire directory for the item's uploads
-            current_app.logger.info(f"Deleted directory: {item_upload_dir}")
-
-        db.session.delete(item)
-        db.session.commit()
-        flash(f"{category.capitalize()} '{item.title}' deleted successfully.", "success")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error deleting {category} '{item.title}': {str(e)}", "danger")
+        flash('Error sending verification email. Please try again.', 'danger')
     
-    return redirect(url_for("main_routes.admin_dashboard"))
+    return redirect(url_for('verify_email'))
 
+@app.route('/search')
+@login_required
+def search():
+    form = SearchForm()
+    projects = []
+    testing_items = []
+    query = request.args.get('query', '')
+    
+    if query:
+        # Search in projects
+        projects = Project.query.filter(
+            or_(
+                Project.title.contains(query),
+                Project.description.contains(query),
+                Project.code.contains(query),
+                Project.connections.contains(query),
+                Project.procedure.contains(query)
+            )
+        ).all()
+        
+        # Search in testing items
+        testing_items = Testing.query.filter(
+            or_(
+                Testing.title.contains(query),
+                Testing.description.contains(query),
+                Testing.code.contains(query),
+                Testing.connections.contains(query),
+                Testing.procedure.contains(query)
+            )
+        ).all()
+    
+    return render_template('search_results.html', 
+                         projects=projects, 
+                         testing_items=testing_items, 
+                         query=query,
+                         form=form)
 
-@main_routes.route("/profile")
+@app.route('/search/projects')
+@login_required
+def search_projects():
+    form = SearchForm()
+    projects = []
+    query = request.args.get('query', '')
+    
+    if query:
+        projects = Project.query.filter(
+            or_(
+                Project.title.contains(query),
+                Project.description.contains(query),
+                Project.code.contains(query),
+                Project.connections.contains(query),
+                Project.procedure.contains(query)
+            )
+        ).all()
+    
+    return render_template('search_results.html', 
+                         projects=projects, 
+                         testing_items=[], 
+                         query=query,
+                         form=form,
+                         search_type='projects')
+
+@app.route('/search/testing')
+@login_required
+def search_testing():
+    form = SearchForm()
+    testing_items = []
+    query = request.args.get('query', '')
+    
+    if query:
+        testing_items = Testing.query.filter(
+            or_(
+                Testing.title.contains(query),
+                Testing.description.contains(query),
+                Testing.code.contains(query),
+                Testing.connections.contains(query),
+                Testing.procedure.contains(query)
+            )
+        ).all()
+    
+    return render_template('search_results.html', 
+                         projects=[], 
+                         testing_items=testing_items, 
+                         query=query,
+                         form=form,
+                         search_type='testing')
+
+@app.route('/profile')
 @login_required
 def profile():
-    return render_template(
-        "profile.html",
-        user=current_user,
-        # project_history=current_user.project_views if hasattr(current_user, "project_views") else [] # Uncomment if ProjectView is used
-    )
+    interests_list = current_user.interests.split(',') if current_user.interests else []
+    recent_projects = Project.query.filter_by(user_id=current_user.id).order_by(Project.created_at.desc()).limit(3).all()
+    recent_testing = Testing.query.filter_by(user_id=current_user.id).order_by(Testing.created_at.desc()).limit(3).all()
+    return render_template('profile.html', user=current_user, interests_list=interests_list,
+                         recent_projects=recent_projects, recent_testing=recent_testing)
 
-@main_routes.route("/profile/upload_photo", methods=["POST"])
+@app.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
-def upload_profile_photo():
-    file = request.files.get("photo")
-
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        unique_filename = f"{current_user.id}_{timestamp}_{filename}"
-
-        upload_folder = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'], "profile_photos")
-        os.makedirs(upload_folder, exist_ok=True)
-
-        file_path = os.path.join(upload_folder, unique_filename)
-        file.save(file_path)
-
-        current_user.profile_photo = os.path.join(current_app.config['UPLOAD_FOLDER'], "profile_photos", unique_filename).replace(os.sep, '/')
+def edit_profile():
+    form = ProfileForm()
+    
+    if form.validate_on_submit():
+        # Check current password if trying to change password
+        if form.new_password.data:
+            if not form.current_password.data or not check_password_hash(current_user.password_hash, form.current_password.data):
+                flash('Current password is required to change password.', 'danger')
+                return render_template('edit_profile.html', form=form)
+            current_user.password_hash = generate_password_hash(form.new_password.data)
+        
+        # Update profile photo if uploaded
+        if form.profile_photo.data:
+            if current_user.profile_photo:
+                delete_file(current_user.profile_photo)
+            current_user.profile_photo = save_uploaded_file(form.profile_photo.data, 'profiles')
+        
+        # Update other fields
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        current_user.interests = ','.join(form.interests.data)
+        
         db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+    
+    # Pre-populate form with current data
+    form.username.data = current_user.username
+    form.email.data = current_user.email
+    if current_user.interests:
+        form.interests.data = current_user.interests.split(',')
+    
+    return render_template('edit_profile.html', form=form)
 
-        flash("Profile photo updated successfully.", "success")
-    else:
-        flash("Invalid file or no file selected.", "danger")
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
-    return redirect(url_for("main_routes.profile"))
-
-@main_routes.route("/contact")
+@app.route('/contact')
 def contact():
-    return render_template("contact.html")
+    return render_template('contact.html')
 
-@main_routes.app_errorhandler(403)
-def forbidden_error(error):
-    return render_template("403.html"), 403
+# Project routes
+@app.route('/projects')
+@login_required
+def projects():
+    all_projects = Project.query.order_by(Project.created_at.desc()).all()
+    return render_template('projects.html', projects=all_projects)
 
-@main_routes.app_errorhandler(404)
+@app.route('/projects/<int:project_id>', methods=['GET', 'POST'])
+@login_required
+def project_detail(project_id):
+    project = Project.query.get_or_404(project_id)
+    comment_form = CommentForm()
+    rating_form = RatingForm()
+    
+    # Handle comment submission
+    if comment_form.validate_on_submit() and comment_form.submit.data:
+        comment = ProjectComment(
+            content=comment_form.content.data,
+            user_id=current_user.id,
+            project_id=project.id
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash('Your comment has been posted!', 'success')
+        return redirect(url_for('project_detail', project_id=project_id))
+    
+    # Handle rating submission
+    if rating_form.validate_on_submit() and rating_form.submit.data:
+        # Check if user already rated this project
+        existing_rating = ProjectRating.query.filter_by(
+            user_id=current_user.id, 
+            project_id=project.id
+        ).first()
+        
+        if existing_rating:
+            existing_rating.rating = int(rating_form.rating.data)
+        else:
+            rating = ProjectRating(
+                rating=int(rating_form.rating.data),
+                user_id=current_user.id,
+                project_id=project.id
+            )
+            db.session.add(rating)
+        
+        db.session.commit()
+        flash('Your rating has been submitted!', 'success')
+        return redirect(url_for('project_detail', project_id=project_id))
+    
+    # Get average rating
+    ratings = project.ratings
+    avg_rating = sum(r.rating for r in ratings) / len(ratings) if ratings else 0
+    user_rating = None
+    if current_user.is_authenticated:
+        user_rating = ProjectRating.query.filter_by(
+            user_id=current_user.id, 
+            project_id=project.id
+        ).first()
+        if user_rating:
+            rating_form.rating.data = str(user_rating.rating)
+    
+    return render_template('project_detail.html', 
+                         project=project, 
+                         comment_form=comment_form,
+                         rating_form=rating_form,
+                         avg_rating=avg_rating,
+                         user_rating=user_rating)
+
+# Testing routes
+@app.route('/testing')
+@login_required
+def testing():
+    all_testing = Testing.query.order_by(Testing.created_at.desc()).all()
+    return render_template('testing.html', testing_items=all_testing)
+
+@app.route('/testing/<int:testing_id>')
+@login_required
+def testing_detail(testing_id):
+    testing_item = Testing.query.get_or_404(testing_id)
+    return render_template('testing_detail.html', testing=testing_item)
+
+# Admin routes - Only allow owner access (user ID 1)
+def admin_required(func):
+    def decorated_function(*args, **kwargs):
+        # Check if user is logged in and is the owner (user ID 1)
+        if not current_user.is_authenticated or current_user.id != 1:
+            abort(403)  # Forbidden - Only owner can access admin
+            
+        return func(*args, **kwargs)
+    
+    # Make sure decorated function has the same name and attributes as the original
+    decorated_function.__name__ = func.__name__
+    return login_required(decorated_function)
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    projects = Project.query.all()
+    testing_items = Testing.query.all()
+    return render_template('admin/dashboard.html', projects=projects, testing_items=testing_items)
+
+@app.route('/admin/add-project', methods=['GET', 'POST'])
+@admin_required
+def add_project():
+    form = ProjectForm()
+    
+    if form.validate_on_submit():
+        # Save uploaded files
+        image_path = save_uploaded_file(form.image.data, 'projects/images')
+        video_path = save_uploaded_file(form.video.data, 'projects/videos')
+        circuit_path = save_uploaded_file(form.circuit_diagram.data, 'projects/circuits')
+        
+        # Create new project
+        project = Project(
+            title=form.title.data,
+            description=form.description.data,
+            image_path=image_path,
+            code=form.code.data,
+            video_path=video_path,
+            circuit_diagram=circuit_path,
+            connections=form.connections.data,
+            procedure=form.procedure.data,
+            user_id=current_user.id
+        )
+        
+        db.session.add(project)
+        db.session.commit()
+        
+        flash('Project added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/add_project.html', form=form)
+
+@app.route('/admin/edit-project/<int:project_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    form = ProjectForm(obj=project)
+    
+    if form.validate_on_submit():
+        # Handle file uploads - only update if new file is provided
+        if form.image.data:
+            if project.image_path:
+                delete_file(project.image_path)
+            project.image_path = save_uploaded_file(form.image.data, 'projects/images')
+            
+        if form.video.data:
+            if project.video_path:
+                delete_file(project.video_path)
+            project.video_path = save_uploaded_file(form.video.data, 'projects/videos')
+            
+        if form.circuit_diagram.data:
+            if project.circuit_diagram:
+                delete_file(project.circuit_diagram)
+            project.circuit_diagram = save_uploaded_file(form.circuit_diagram.data, 'projects/circuits')
+        
+        # Update text fields
+        project.title = form.title.data
+        project.description = form.description.data
+        project.code = form.code.data
+        project.connections = form.connections.data
+        project.procedure = form.procedure.data
+        
+        db.session.commit()
+        flash('Project updated successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/edit_project.html', form=form, project=project)
+
+@app.route('/admin/delete-project/<int:project_id>')
+@admin_required
+def delete_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    
+    # Delete associated files
+    if project.image_path:
+        delete_file(project.image_path)
+    if project.video_path:
+        delete_file(project.video_path)
+    if project.circuit_diagram:
+        delete_file(project.circuit_diagram)
+    
+    # Delete from database
+    db.session.delete(project)
+    db.session.commit()
+    
+    flash('Project deleted successfully!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/add-testing', methods=['GET', 'POST'])
+@admin_required
+def add_testing():
+    form = TestingForm()
+    
+    if form.validate_on_submit():
+        # Save uploaded files
+        image_path = save_uploaded_file(form.image.data, 'testing/images')
+        video_path = save_uploaded_file(form.video.data, 'testing/videos')
+        circuit_path = save_uploaded_file(form.circuit_diagram.data, 'testing/circuits')
+        
+        # Create new testing item
+        testing = Testing(
+            title=form.title.data,
+            description=form.description.data,
+            image_path=image_path,
+            code=form.code.data,
+            video_path=video_path,
+            circuit_diagram=circuit_path,
+            connections=form.connections.data,
+            procedure=form.procedure.data,
+            user_id=current_user.id
+        )
+        
+        db.session.add(testing)
+        db.session.commit()
+        
+        flash('Testing item added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/add_testing.html', form=form)
+
+@app.route('/admin/edit-testing/<int:testing_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_testing(testing_id):
+    testing = Testing.query.get_or_404(testing_id)
+    form = TestingForm(obj=testing)
+    
+    if form.validate_on_submit():
+        # Handle file uploads - only update if new file is provided
+        if form.image.data:
+            if testing.image_path:
+                delete_file(testing.image_path)
+            testing.image_path = save_uploaded_file(form.image.data, 'testing/images')
+            
+        if form.video.data:
+            if testing.video_path:
+                delete_file(testing.video_path)
+            testing.video_path = save_uploaded_file(form.video.data, 'testing/videos')
+            
+        if form.circuit_diagram.data:
+            if testing.circuit_diagram:
+                delete_file(testing.circuit_diagram)
+            testing.circuit_diagram = save_uploaded_file(form.circuit_diagram.data, 'testing/circuits')
+        
+        # Update text fields
+        testing.title = form.title.data
+        testing.description = form.description.data
+        testing.code = form.code.data
+        testing.connections = form.connections.data
+        testing.procedure = form.procedure.data
+        
+        db.session.commit()
+        flash('Testing item updated successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/edit_testing.html', form=form, testing=testing)
+
+@app.route('/admin/delete-testing/<int:testing_id>')
+@admin_required
+def delete_testing(testing_id):
+    testing = Testing.query.get_or_404(testing_id)
+    
+    # Delete associated files
+    if testing.image_path:
+        delete_file(testing.image_path)
+    if testing.video_path:
+        delete_file(testing.video_path)
+    if testing.circuit_diagram:
+        delete_file(testing.circuit_diagram)
+    
+    # Delete from database
+    db.session.delete(testing)
+    db.session.commit()
+    
+    flash('Testing item deleted successfully!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/social-media', methods=['GET', 'POST'])
+@admin_required
+def admin_social_media():
+    # Get or create social media settings
+    social_media = SocialMediaLinks.query.first()
+    if not social_media:
+        social_media = SocialMediaLinks()
+        db.session.add(social_media)
+        db.session.commit()
+    
+    form = SocialMediaForm(obj=social_media)
+    
+    if form.validate_on_submit():
+        social_media.youtube_url = form.youtube_url.data or ''
+        social_media.instagram_url = form.instagram_url.data or ''
+        social_media.github_url = form.github_url.data or ''
+        social_media.linkedin_url = form.linkedin_url.data or ''
+        social_media.twitter_url = form.twitter_url.data or ''
+        
+        db.session.commit()
+        flash('Social media links updated successfully!', 'success')
+        return redirect(url_for('admin_social_media'))
+    
+    return render_template('admin/social_media.html', form=form, social_media=social_media)
+
+# Error handlers
+@app.errorhandler(404)
 def not_found_error(error):
-    return render_template("404.html"), 404
+    return render_template('404.html'), 404
 
-@main_routes.app_errorhandler(500)
+@app.errorhandler(403)
+def forbidden_error(error):
+    return render_template('403.html'), 403
+
+@app.errorhandler(500)
 def internal_error(error):
-    db.session.rollback() # Rollback in case of database errors
-    return render_template("500.html"), 500
+    db.session.rollback()
+    return render_template('500.html'), 500
