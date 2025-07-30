@@ -29,9 +29,9 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ================== ROUTES ==================
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template("home.html")
+    return render_template("home.html", current_year=datetime.now().year)
 
 @app.route('/contact')
 def contact():
