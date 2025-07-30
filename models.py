@@ -1,6 +1,6 @@
-from app import db
+from datetime import datetime, timedelta
 from flask_login import UserMixin
-from datetime import datetime
+from extensions import db  # ✅ Import db from extensions.py to avoid circular import
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -10,12 +10,12 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_verified = db.Column(db.Boolean, default=False)
     profile_photo = db.Column(db.String(256))
-    interests = db.Column(db.Text)  # Store as comma-separated values
+    interests = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     projects = db.relationship('Project', backref='author', lazy='dynamic')
     testing_items = db.relationship('Testing', backref='author', lazy='dynamic')
-    
+
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -32,7 +32,7 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+
     def __repr__(self):
         return f'<Project {self.title}>'
 
@@ -49,7 +49,7 @@ class Testing(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+
     def __repr__(self):
         return f'<Testing {self.title}>'
 
@@ -59,12 +59,10 @@ class EmailVerification(db.Model):
     otp = db.Column(db.String(6), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_used = db.Column(db.Boolean, default=False)
-    
+
     def is_expired(self):
-        # OTP expires after 10 minutes
-        from datetime import timedelta
         return datetime.utcnow() - self.created_at > timedelta(minutes=10)
-    
+
     def __repr__(self):
         return f'<EmailVerification {self.email}>'
 
@@ -74,26 +72,27 @@ class ProjectComment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    
+
     user = db.relationship('User', backref='project_comments')
     project = db.relationship('Project', backref='comments')
-    
+
     def __repr__(self):
         return f'<ProjectComment {self.id}>'
 
 class ProjectRating(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    rating = db.Column(db.Integer, nullable=False)  # 1-5 stars
+    rating = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    
+
     user = db.relationship('User', backref='project_ratings')
     project = db.relationship('Project', backref='ratings')
-    
-    # Ensure one rating per user per project
-    __table_args__ = (db.UniqueConstraint('user_id', 'project_id', name='unique_user_project_rating'),)
-    
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'project_id', name='unique_user_project_rating'),
+    )
+
     def __repr__(self):
         return f'<ProjectRating {self.rating} stars for project {self.project_id}>'
 
@@ -105,6 +104,6 @@ class SocialMediaLinks(db.Model):
     linkedin_url = db.Column(db.String(256), default='')
     twitter_url = db.Column(db.String(256), default='')
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     def __repr__(self):
         return f'<SocialMediaLinks {self.id}>'
