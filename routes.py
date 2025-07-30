@@ -1,14 +1,12 @@
+from flask import render_template, redirect, url_for, request, flash, abort
+from flask_login import login_required, current_user
+from functools import wraps
 import os
-from flask import render_template, flash, redirect, url_for, request, abort, current_app, session
-from flask_login import login_user, logout_user, current_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import or_
-from app import app, db
-from models import User, Project, Testing, EmailVerification, ProjectComment, ProjectRating, SocialMediaLinks
-from forms import LoginForm, RegistrationForm, ProjectForm, TestingForm, EmailVerificationForm, SearchForm, ProfileForm, CommentForm, RatingForm, SocialMediaForm
-from utils import save_uploaded_file, delete_file, is_admin_ip
-from email_utils import create_verification_record, verify_otp
 
+from app import app, db
+from models import Project, Contact, SocialMediaLinks
+from forms import ProjectForm, SocialMediaForm
+from utils import save_uploaded_file, delete_file
 @app.context_processor
 def inject_social_media():
     """Make social media links available in all templates"""
