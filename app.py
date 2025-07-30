@@ -1,74 +1,67 @@
-# app.py
-import os
-from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
-import logging
+import os
+import uuid
+from datetime import datetime
 
-# Flask App and Config
+# Initialize app
 app = Flask(__name__)
-app.config.from_object('config.Config')
+app.secret_key = "supersecretkey"
 
-# Ensure upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Setup upload folder
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Database
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
-# Login Manager
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
+# Models
+class Contact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('app')
-logger.info("\u2705 Admin user created.")
-
-# Import models
-from models import *
-
-# User loader
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+class UploadedFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    upload_time = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Routes
 @app.route('/')
-def home():
-    return render_template('home.html')
+def index():
+    return render_template('index.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/services')
+def services():
+    return render_template('services.html')
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
     if request.method == 'POST':
+        name = request.form['name']
         email = request.form['email']
-        password = request.form['password']
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            login_user(user)
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Invalid credentials', 'danger')
-    return render_template('login.html')
+        message = request.form['message']
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('login'))
+        new_contact = Contact(name=name, email=email, message=message)
+        db.session.add(new_contact)
+        db.session.commit()
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html', user=current_user)
+        flash('Message sent successfully!', 'success')
+        return redirect(url_for('contact'))
+
+    return render_template('contact.html')
 
 @app.route('/upload', methods=['GET', 'POST'])
-@login_required
 def upload():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -79,17 +72,36 @@ def upload():
             flash('No selected file', 'danger')
             return redirect(request.url)
         if file:
-            filename = secure_filename(file.filename)
+            original_filename = file.filename
+            filename = str(uuid.uuid4()) + secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
+
+            uploaded_file = UploadedFile(filename=filename, original_filename=original_filename)
+            db.session.add(uploaded_file)
+            db.session.commit()
+
             flash('File uploaded successfully!', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('uploaded_files'))
+
     return render_template('upload.html')
 
+@app.route('/uploads')
+def uploaded_files():
+    files = UploadedFile.query.order_by(UploadedFile.upload_time.desc()).all()
+    return render_template('uploads.html', files=files)
+
 @app.route('/uploads/<filename>')
-@login_required
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html"), 404
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    with app.app_context():
+        db.create_all()
+        print("✅ Database tables created.")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
