@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block title %}Add Project - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="project-title mb-4">
+        <i class="fas fa-plus-circle"></i> Add New Project
+    </h1>
+    
+    <!-- Upload Progress -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-upload"></i> Upload Manager</h5>
+        </div>
+        <div class="card-body">
+            <div class="upload-progress">
+                <div class="step-indicator mb-3">
+                    <div class="step-item active" data-step="basic">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Basic Info</div>
+                    </div>
+                    <div class="step-item" data-step="media">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Media Files</div>
+                    </div>
+                    <div class="step-item" data-step="code">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Code & Details</div>
+                    </div>
+                    <div class="step-item" data-step="review">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data" id="project-form">
+        {{ form.hidden_tag() }}
+        
+        <!-- Step 1: Basic Information -->
+        <div class="card mb-4 step-content" id="step-basic">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.title.id }}" class="form-label">Project Title *</label>
+                        {{ form.title(class="form-control", placeholder="Enter project title") }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.description.id }}" class="form-label">Project Description *</label>
+                        {{ form.description(class="form-control", rows=5, placeholder="Describe your project, its purpose, and key features") }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Media Files -->
+        <div class="card mb-4 step-content" id="step-media" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-images"></i> Media Files</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.image.id }}" class="form-label">
+                            <i class="fas fa-image text-primary"></i> Project Photo
+                        </label>
+                        <div class="upload-area" data-target="image">
+                            {{ form.image(class="form-control file-input", accept=".jpg,.jpeg,.png,.gif") }}
+                            <div class="upload-placeholder">
+                                <i class="fas fa-camera fa-2x text-muted"></i>
+                                <p class="text-muted">Click to select project image</p>
+                                <small class="text-muted">JPG, PNG, GIF up to 5MB</small>
+                            </div>
+                            <div class="preview-container">
+                                <img class="preview-image" style="display: none;">
+                                <button type="button" class="btn btn-sm btn-danger remove-file" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.circuit_diagram.id }}" class="form-label">
+                            <i class="fas fa-sitemap text-success"></i> Circuit Diagram
+                        </label>
+                        <div class="upload-area" data-target="circuit">
+                            {{ form.circuit_diagram(class="form-control file-input", accept=".jpg,.jpeg,.png,.gif,.svg") }}
+                            <div class="upload-placeholder">
+                                <i class="fas fa-project-diagram fa-2x text-muted"></i>
+                                <p class="text-muted">Click to select circuit diagram</p>
+                                <small class="text-muted">JPG, PNG, GIF, SVG up to 5MB</small>
+                            </div>
+                            <div class="preview-container">
+                                <img class="preview-image" style="display: none;">
+                                <button type="button" class="btn btn-sm btn-danger remove-file" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.video.id }}" class="form-label">
+                            <i class="fas fa-video text-danger"></i> Video Demonstration
+                        </label>
+                        <div class="upload-area" data-target="video">
+                            {{ form.video(class="form-control file-input", accept=".mp4,.webm,.avi") }}
+                            <div class="upload-placeholder">
+                                <i class="fas fa-video fa-2x text-muted"></i>
+                                <p class="text-muted">Click to select demo video</p>
+                                <small class="text-muted">MP4, WebM, AVI up to 16MB</small>
+                            </div>
+                            <div class="preview-container">
+                                <div class="video-info" style="display: none;">
+                                    <i class="fas fa-video"></i>
+                                    <span class="filename"></span>
+                                    <button type="button" class="btn btn-sm btn-danger remove-file">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 3: Code & Technical Details -->
+        <div class="card mb-4 step-content" id="step-code" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-code"></i> Code & Technical Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.code.id }}" class="form-label">
+                            <i class="fas fa-file-code"></i> Source Code
+                        </label>
+                        {{ form.code(class="form-control", rows=10, placeholder="Paste your complete source code here...") }}
+                        <small class="form-text text-muted">Include main code, libraries used, and any special setup requirements</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.connections.id }}" class="form-label">
+                            <i class="fas fa-plug"></i> Component Connections
+                        </label>
+                        {{ form.connections(class="form-control", rows=5, placeholder="Describe how components are connected...") }}
+                        <small class="form-text text-muted">Pin connections, wiring details, component specifications</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.procedure.id }}" class="form-label">
+                            <i class="fas fa-list-ol"></i> Step-by-Step Procedure
+                        </label>
+                        {{ form.procedure(class="form-control", rows=5, placeholder="Step 1: ...\nStep 2: ...\nStep 3: ...") }}
+                        <small class="form-text text-muted">Clear instructions to replicate the project</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 4: Review -->
+        <div class="card mb-4 step-content" id="step-review" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-eye"></i> Review & Submit</h5>
+            </div>
+            <div class="card-body">
+                <div class="review-summary">
+                    <h6>Project Summary</h6>
+                    <div class="summary-item">
+                        <strong>Title:</strong> <span id="review-title">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Description:</strong> <span id="review-description">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Files Selected:</strong>
+                        <ul id="review-files"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-between mb-4">
+            <div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="button" class="btn btn-secondary" id="prev-step" style="display: none;">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" id="next-step">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+                {{ form.submit(class="btn btn-success", id="submit-form", style="display: none;") }}
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+}
+
+.step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background-color: #dee2e6;
+    z-index: 1;
+}
+
+.step-item.active:not(:last-child)::after,
+.step-item.completed:not(:last-child)::after {
+    background-color: #0d6efd;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+    z-index: 2;
+    position: relative;
+}
+
+.step-item.active .step-number {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.step-item.completed .step-number {
+    background-color: #198754;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.8rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.step-item.active .step-label {
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: border-color 0.3s;
+    position: relative;
+    min-height: 120px;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+}
+
+.upload-area.dragover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 4px;
+}
+
+.remove-file {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.video-info {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.summary-item {
+    margin-bottom: 10px;
+}
+
+#review-files {
+    margin: 0;
+    padding-left: 20px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentStep = 0;
+    const steps = ['basic', 'media', 'code', 'review'];
+    
+    // Initialize step navigation
+    updateStepDisplay();
+    
+    // Next button click
+    document.getElementById('next-step').addEventListener('click', function() {
+        if (currentStep < steps.length - 1) {
+            currentStep++;
+            updateStepDisplay();
+        }
+    });
+    
+    // Previous button click
+    document.getElementById('prev-step').addEventListener('click', function() {
+        if (currentStep > 0) {
+            currentStep--;
+            updateStepDisplay();
+        }
+    });
+    
+    function updateStepDisplay() {
+        // Hide all steps
+        document.querySelectorAll('.step-content').forEach(el => el.style.display = 'none');
+        
+        // Show current step
+        document.getElementById('step-' + steps[currentStep]).style.display = 'block';
+        
+        // Update step indicators
+        document.querySelectorAll('.step-item').forEach((el, index) => {
+            el.classList.remove('active', 'completed');
+            if (index === currentStep) {
+                el.classList.add('active');
+            } else if (index < currentStep) {
+                el.classList.add('completed');
+            }
+        });
+        
+        // Update buttons
+        document.getElementById('prev-step').style.display = currentStep > 0 ? 'inline-block' : 'none';
+        document.getElementById('next-step').style.display = currentStep < steps.length - 1 ? 'inline-block' : 'none';
+        document.getElementById('submit-form').style.display = currentStep === steps.length - 1 ? 'inline-block' : 'none';
+        
+        // Update review if on last step
+        if (currentStep === steps.length - 1) {
+            updateReviewSummary();
+        }
+    }
+    
+    function updateReviewSummary() {
+        document.getElementById('review-title').textContent = 
+            document.querySelector('input[name="title"]').value || '-';
+        document.getElementById('review-description').textContent = 
+            document.querySelector('textarea[name="description"]').value || '-';
+        
+        const filesList = document.getElementById('review-files');
+        filesList.innerHTML = '';
+        
+        ['image', 'video', 'circuit_diagram'].forEach(field => {
+            const input = document.querySelector(`input[name="${field}"]`);
+            if (input.files.length > 0) {
+                const li = document.createElement('li');
+                li.textContent = `${field.replace('_', ' ')}: ${input.files[0].name}`;
+                filesList.appendChild(li);
+            }
+        });
+        
+        if (filesList.children.length === 0) {
+            filesList.innerHTML = '<li>No files selected</li>';
+        }
+    }
+    
+    // File upload handling
+    document.querySelectorAll('.file-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const uploadArea = this.closest('.upload-area');
+            const previewContainer = uploadArea.querySelector('.preview-container');
+            const placeholder = uploadArea.querySelector('.upload-placeholder');
+            
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                
+                if (this.name === 'video') {
+                    const videoInfo = previewContainer.querySelector('.video-info');
+                    const filename = videoInfo.querySelector('.filename');
+                    filename.textContent = file.name;
+                    videoInfo.style.display = 'flex';
+                    placeholder.style.display = 'none';
+                } else {
+                    const img = previewContainer.querySelector('.preview-image');
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        previewContainer.querySelector('.remove-file').style.display = 'block';
+                        placeholder.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+    });
+    
+    // Remove file functionality
+    document.querySelectorAll('.remove-file').forEach(button => {
+        button.addEventListener('click', function() {
+            const uploadArea = this.closest('.upload-area');
+            const input = uploadArea.querySelector('.file-input');
+            const previewContainer = uploadArea.querySelector('.preview-container');
+            const placeholder = uploadArea.querySelector('.upload-placeholder');
+            
+            input.value = '';
+            previewContainer.querySelectorAll('img, .video-info').forEach(el => el.style.display = 'none');
+            this.style.display = 'none';
+            placeholder.style.display = 'block';
+        });
+    });
+});
+</script>
+
+{% endblock %}

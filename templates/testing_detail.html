@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ testing.title }} - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="project-header">
+        <h1 class="project-title">{{ testing.title }}</h1>
+        <div class="project-meta">
+            <span><i class="fas fa-calendar-alt"></i> Created: {{ testing.created_at.strftime('%B %d, %Y') }}</span>
+            {% if testing.created_at != testing.updated_at %}
+            <span class="ms-3"><i class="fas fa-edit"></i> Updated: {{ testing.updated_at.strftime('%B %d, %Y') }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if testing.image_path %}
+    <div class="text-center mb-4">
+        <img src="{{ url_for('static', filename=testing.image_path) }}" class="project-image" alt="{{ testing.title }}">
+    </div>
+    {% endif %}
+
+    <div class="project-section">
+        <h2 class="section-title">Description</h2>
+        <div>{{ testing.description }}</div>
+    </div>
+
+    {% if testing.code %}
+    <div class="project-section">
+        <h2 class="section-title">Code</h2>
+        <div class="position-relative">
+            <pre class="code-block">{{ testing.code }}</pre>
+            <button class="btn btn-sm btn-secondary position-absolute top-0 end-0 m-2 copy-btn">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if testing.video_path %}
+    <div class="project-section">
+        <h2 class="section-title">Video Demonstration</h2>
+        <div class="ratio ratio-16x9">
+            <video controls>
+                <source src="{{ url_for('static', filename=testing.video_path) }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if testing.circuit_diagram %}
+    <div class="project-section">
+        <h2 class="section-title">Circuit Diagram</h2>
+        <div class="text-center">
+            <img src="{{ url_for('static', filename=testing.circuit_diagram) }}" class="img-fluid" alt="Circuit diagram for {{ testing.title }}">
+        </div>
+    </div>
+    {% endif %}
+
+    {% if testing.connections %}
+    <div class="project-section">
+        <h2 class="section-title">Connections</h2>
+        <div>{{ testing.connections }}</div>
+    </div>
+    {% endif %}
+
+    {% if testing.procedure %}
+    <div class="project-section">
+        <h2 class="section-title">Procedure</h2>
+        <div>{{ testing.procedure }}</div>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_admin %}
+    <div class="mt-5 d-flex justify-content-end">
+        <a href="{{ url_for('edit_testing', testing_id=testing.id) }}" class="btn btn-primary me-2">
+            <i class="fas fa-edit"></i> Edit Testing
+        </a>
+        <a href="{{ url_for('delete_testing', testing_id=testing.id) }}" class="btn btn-danger confirm-delete">
+            <i class="fas fa-trash-alt"></i> Delete Testing
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

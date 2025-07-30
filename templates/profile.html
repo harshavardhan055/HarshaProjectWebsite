@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="project-title">Profile</h1>
+            <p class="lead">Manage your account settings and view your activity.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Profile Card -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_photo %}
+                    <img src="{{ url_for('static', filename=user.profile_photo) }}" 
+                         class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;" 
+                         alt="Profile Photo">
+                    {% else %}
+                    <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                         style="width: 120px; height: 120px;">
+                        <i class="fas fa-user fa-4x text-white"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <h4 class="mb-2">{{ user.username }}</h4>
+                    <p class="text-muted mb-3">{{ user.email }}</p>
+                    
+                    {% if user.is_verified %}
+                    <span class="badge bg-success mb-3">
+                        <i class="fas fa-check-circle me-1"></i>Verified
+                    </span>
+                    {% else %}
+                    <span class="badge bg-warning mb-3">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Unverified
+                    </span>
+                    {% endif %}
+                    
+                    {% if user.is_admin %}
+                    <span class="badge bg-primary mb-3">
+                        <i class="fas fa-crown me-1"></i>Admin
+                    </span>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h3 class="text-primary">{{ user.projects.count() }}</h3>
+                            <small class="text-muted">Projects</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-secondary">{{ user.testing_items.count() }}</h3>
+                            <small class="text-muted">Testing Items</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Profile Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Username:</strong></div>
+                        <div class="col-sm-9">{{ user.username }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Email:</strong></div>
+                        <div class="col-sm-9">{{ user.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Member Since:</strong></div>
+                        <div class="col-sm-9">{{ user.created_at.strftime('%B %d, %Y') }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-3"><strong>Status:</strong></div>
+                        <div class="col-sm-9">
+                            {% if user.is_verified %}
+                            <span class="badge bg-success">Verified</span>
+                            {% else %}
+                            <span class="badge bg-warning">Unverified</span>
+                            {% endif %}
+                            {% if user.is_admin %}
+                            <span class="badge bg-primary ms-1">Admin</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interests -->
+            {% if interests_list %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Interests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for interest in interests_list %}
+                        {% if interest %}
+                        <span class="badge bg-info text-dark">
+                            {% if interest == 'electronics' %}
+                            <i class="fas fa-microchip me-1"></i>Electronics
+                            {% elif interest == 'programming' %}
+                            <i class="fas fa-code me-1"></i>Programming
+                            {% elif interest == 'iot' %}
+                            <i class="fas fa-wifi me-1"></i>Internet of Things
+                            {% elif interest == 'robotics' %}
+                            <i class="fas fa-robot me-1"></i>Robotics
+                            {% elif interest == 'web_development' %}
+                            <i class="fas fa-globe me-1"></i>Web Development
+                            {% elif interest == 'mobile_development' %}
+                            <i class="fas fa-mobile-alt me-1"></i>Mobile Development
+                            {% elif interest == 'ai_ml' %}
+                            <i class="fas fa-brain me-1"></i>AI/Machine Learning
+                            {% elif interest == 'embedded_systems' %}
+                            <i class="fas fa-microchip me-1"></i>Embedded Systems
+                            {% elif interest == 'hardware_design' %}
+                            <i class="fas fa-cogs me-1"></i>Hardware Design
+                            {% elif interest == 'software_testing' %}
+                            <i class="fas fa-bug me-1"></i>Software Testing
+                            {% else %}
+                            {{ interest|title }}
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+
+                    
+                    {% if recent_projects or recent_testing %}
+                    <div class="list-group list-group-flush">
+                        {% for project in recent_projects %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-project-diagram text-primary me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ project.title }}</h6>
+                                    <small class="text-muted">Project created on {{ project.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                                <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        {% for testing in recent_testing %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-flask text-secondary me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ testing.title }}</h6>
+                                    <small class="text-muted">Testing created on {{ testing.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                                <a href="{{ url_for('testing_detail', testing_id=testing.id) }}" class="btn btn-sm btn-outline-secondary">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No recent activity found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

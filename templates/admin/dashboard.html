@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="admin-header mb-4">
+        <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+        <p>Manage your projects and testing items</p>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('add_project') }}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Add New Project
+                        </a>
+                        <a href="{{ url_for('add_testing') }}" class="btn btn-secondary">
+                            <i class="fas fa-plus-circle"></i> Add New Testing Item
+                        </a>
+                        <a href="{{ url_for('admin_social_media') }}" class="btn btn-info">
+                            <i class="fas fa-share-alt"></i> Manage Social Media
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Statistics</h5>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="p-3">
+                                <h2 class="mb-0">{{ projects|length }}</h2>
+                                <p class="mb-0">Projects</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3">
+                                <h2 class="mb-0">{{ testing_items|length }}</h2>
+                                <p class="mb-0">Testing Items</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Projects Management -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Projects</h5>
+            <a href="{{ url_for('add_project') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> Add Project
+            </a>
+        </div>
+        <div class="card-body">
+            {% if projects %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td>{{ project.title }}</td>
+                            <td>{{ project.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ project.updated_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_project', project_id=project.id) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_project', project_id=project.id) }}" class="btn btn-sm btn-danger confirm-delete" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center py-3">No projects available. <a href="{{ url_for('add_project') }}">Add your first project</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Testing Items Management -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Testing Items</h5>
+            <a href="{{ url_for('add_testing') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> Add Testing
+            </a>
+        </div>
+        <div class="card-body">
+            {% if testing_items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for testing in testing_items %}
+                        <tr>
+                            <td>{{ testing.title }}</td>
+                            <td>{{ testing.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ testing.updated_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a href="{{ url_for('testing_detail', testing_id=testing.id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_testing', testing_id=testing.id) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_testing', testing_id=testing.id) }}" class="btn btn-sm btn-danger confirm-delete" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center py-3">No testing items available. <a href="{{ url_for('add_testing') }}">Add your first testing item</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

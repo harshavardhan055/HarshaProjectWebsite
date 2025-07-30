@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="project-title">Register</h1>
+            <p class="lead">Join our community to access projects and testing resources.</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-plus fa-4x text-muted"></i>
+                        <h4 class="mt-3">Create Your Account</h4>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('register') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.username.id }}" class="form-label">Username</label>
+                            {{ form.username(class="form-control", placeholder="Choose a username") }}
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.email.id }}" class="form-label">Email Address</label>
+                            {{ form.email(class="form-control", placeholder="Enter your email") }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.password.id }}" class="form-label">Password</label>
+                            {{ form.password(class="form-control", placeholder="Create a password") }}
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.password2.id }}" class="form-label">Confirm Password</label>
+                            {{ form.password2(class="form-control", placeholder="Confirm your password") }}
+                            {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password2.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Select Your Interests (Optional)</label>
+                            <div class="row">
+                                {% for choice in form.interests.choices %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="interests" 
+                                               value="{{ choice[0] }}" id="interest_{{ choice[0] }}">
+                                        <label class="form-check-label" for="interest_{{ choice[0] }}">
+                                            {{ choice[1] }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <small class="form-text text-muted">
+                                Help us personalize your experience by selecting your areas of interest.
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-2">Already have an account?</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-success">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login Here
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Benefits Section -->
+            <div class="col-12 mt-5">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-microchip fa-2x text-primary mb-2"></i>
+                                <h6>Electronics Projects</h6>
+                                <small class="text-muted">Circuit designs & embedded systems</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-code fa-2x text-success mb-2"></i>
+                                <h6>Software Development</h6>
+                                <small class="text-muted">Programming & web applications</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-flask fa-2x text-info mb-2"></i>
+                                <h6>Testing & Research</h6>
+                                <small class="text-muted">Experimental procedures & results</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-users fa-2x text-warning mb-2"></i>
+                                <h6>Community</h6>
+                                <small class="text-muted">Comments, ratings & discussions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

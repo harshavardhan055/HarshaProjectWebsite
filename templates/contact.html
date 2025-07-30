@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Contact - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-envelope text-primary"></i> Get In Touch
+                </h1>
+                <p class="lead text-muted">
+                    Have questions about my projects or interested in collaboration? 
+                    Feel free to reach out!
+                </p>
+            </div>
+
+            <div class="row">
+                <!-- Contact Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-4">
+                                <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                                <h4>Email</h4>
+                                <p class="text-muted mb-3">For project inquiries and collaboration</p>
+                                <a href="mailto:technicalmaster193@gmail.com" class="btn btn-outline-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>technicalmaster193@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-4">
+                                <i class="fas fa-phone fa-3x text-success mb-3"></i>
+                                <h4>Phone</h4>
+                                <p class="text-muted mb-3">Available for direct communication</p>
+                                <a href="tel:+916301435542" class="btn btn-outline-success">
+                                    <i class="fas fa-phone me-2"></i>+91 6301435542
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-comment-dots me-2"></i>Send a Message</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Your Name</label>
+                                <input type="text" class="form-control" id="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Your Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" rows="5" required></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary btn-lg" onclick="sendEmail()">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="row mt-5">
+                <div class="col-md-4 text-center mb-3">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-2x text-info"></i>
+                    </div>
+                    <h6>Response Time</h6>
+                    <p class="text-muted">Usually within 24 hours</p>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <div class="mb-3">
+                        <i class="fas fa-code fa-2x text-warning"></i>
+                    </div>
+                    <h6>Project Types</h6>
+                    <p class="text-muted">Electronics, Arduino, IoT, Web Development</p>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <div class="mb-3">
+                        <i class="fas fa-handshake fa-2x text-success"></i>
+                    </div>
+                    <h6>Collaboration</h6>
+                    <p class="text-muted">Open to partnerships and consultations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendEmail() {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const subject = document.getElementById('subject').value;
+    const message = document.getElementById('message').value;
+    
+    if (!name || !email || !subject || !message) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    const mailtoLink = `mailto:technicalmaster193@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`From: ${name} (${email})\n\n${message}`)}`;
+    window.location.href = mailtoLink;
+}
+</script>
+
+{% endblock %}

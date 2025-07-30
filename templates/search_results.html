@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="section-title mb-4">
+                <i class="fas fa-search me-2"></i>
+                {% if search_type == 'projects' %}
+                Project Search Results
+                {% elif search_type == 'testing' %}
+                Testing Search Results
+                {% else %}
+                Search Results
+                {% endif %}
+                {% if query %}
+                for "{{ query }}"
+                {% endif %}
+            </h1>
+            
+            {% if query %}
+            <div class="alert alert-info" role="alert">
+                {% if search_type == 'projects' %}
+                Found {{ projects|length }} project(s) for your search.
+                {% elif search_type == 'testing' %}
+                Found {{ testing_items|length }} testing item(s) for your search.
+                {% else %}
+                Found {{ projects|length + testing_items|length }} result(s) for your search.
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if projects %}
+    <section class="mb-5">
+        <h2 class="section-title">Projects ({{ projects|length }})</h2>
+        <div class="row">
+            {% for project in projects %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    {% if project.image_path %}
+                    <img src="{{ url_for('static', filename=project.image_path) }}" class="card-img-top" alt="{{ project.title }}">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1603694681044-e71c5993d6cd" class="card-img-top" alt="Project placeholder">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ project.title }}</h5>
+                        <p class="card-text">{{ project.description|truncate(100) }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>{{ project.created_at.strftime('%B %d, %Y') }}
+                        </small>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-primary">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if testing_items %}
+    <section class="mb-5">
+        <h2 class="section-title">Testing ({{ testing_items|length }})</h2>
+        <div class="row">
+            {% for testing in testing_items %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    {% if testing.image_path %}
+                    <img src="{{ url_for('static', filename=testing.image_path) }}" class="card-img-top" alt="{{ testing.title }}">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1603694681044-e71c5993d6cd" class="card-img-top" alt="Testing placeholder">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ testing.title }}</h5>
+                        <p class="card-text">{{ testing.description|truncate(100) }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>{{ testing.created_at.strftime('%B %d, %Y') }}
+                        </small>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <a href="{{ url_for('testing_detail', testing_id=testing.id) }}" class="btn btn-primary">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if not projects and not testing_items and query %}
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+        <h3>No results found</h3>
+        <p class="text-muted">Try searching with different keywords or browse all projects.</p>
+        <div class="mt-3">
+            <a href="{{ url_for('projects') }}" class="btn btn-primary me-2">
+                <i class="fas fa-folder me-1"></i>Browse Projects
+            </a>
+            <a href="{{ url_for('testing') }}" class="btn btn-secondary">
+                <i class="fas fa-flask me-1"></i>Browse Testing
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not query %}
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+        <h3>Start your search</h3>
+        <p class="text-muted">Enter keywords in the search bar above to find projects and testing items.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

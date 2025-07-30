@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Harsha Projects{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="project-title">Login</h1>
+            <p class="lead">Access your account to explore projects and testing resources.</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-4x text-muted"></i>
+                        <h4 class="mt-3">Welcome Back!</h4>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('login') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.username.id }}" class="form-label">Username</label>
+                            {{ form.username(class="form-control", placeholder="Enter your username") }}
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.password.id }}" class="form-label">Password</label>
+                            {{ form.password(class="form-control", placeholder="Enter your password") }}
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.remember_me(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ form.remember_me.id }}">Remember Me</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-2">Don't have an account?</p>
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Access Info -->
+            <div class="col-12 mt-5">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-project-diagram fa-2x text-primary mb-2"></i>
+                                <h6>View Projects</h6>
+                                <small class="text-muted">Access electronics & software projects</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-comments fa-2x text-success mb-2"></i>
+                                <h6>Interact</h6>
+                                <small class="text-muted">Comment and rate projects</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <i class="fas fa-search fa-2x text-info mb-2"></i>
+                                <h6>Search</h6>
+                                <small class="text-muted">Find specific projects & testing</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
