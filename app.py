@@ -5,15 +5,20 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+
+# Replace this with a secure secret key in production (set via environment variable ideally)
+app.secret_key = os.environ.get('SECRET_KEY', 'a-secure-dev-key')
+
+# Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # ================== MODELS ==================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), nullable=False, unique=True)
-    email = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), nullable=False, unique=True)
     password = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -40,14 +45,15 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
+            flash("Logged in successfully!", "success")
             return redirect(url_for('profile'))
-        else:
-            flash('Invalid credentials', 'danger')
+        flash('Invalid credentials', 'danger')
     return render_template("login.html")
 
 @app.route('/logout')
 def logout():
     session.clear()
+    flash("Logged out successfully.", "info")
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -55,35 +61,49 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
-        password = generate_password_hash(request.form['password'])
+        password = request.form['password']
+
         if User.query.filter_by(email=email).first():
-            flash("Email already exists", 'warning')
+            flash("Email already registered", 'warning')
             return redirect(url_for('register'))
-        user = User(username=username, email=email, password=password)
-        db.session.add(user)
+
+        hashed_pw = generate_password_hash(password)
+        new_user = User(username=username, email=email, password=hashed_pw)
+        db.session.add(new_user)
         db.session.commit()
-        flash("Registered successfully", 'success')
+
+        flash("Registration successful. Please log in.", 'success')
         return redirect(url_for('login'))
+
     return render_template("register.html")
 
 @app.route('/profile')
 def profile():
-    if 'user_id' not in session:
+    user_id = session.get('user_id')
+    if not user_id:
         return redirect(url_for('login'))
-    user = User.query.get(session['user_id'])
+
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found.", 'warning')
+        return redirect(url_for('logout'))
+
     return render_template("profile.html", user=user)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
-    if 'user_id' not in session:
+    user_id = session.get('user_id')
+    if not user_id:
         return redirect(url_for('login'))
-    user = User.query.get(session['user_id'])
+
+    user = User.query.get(user_id)
     if request.method == 'POST':
         user.username = request.form['username']
         user.email = request.form['email']
         db.session.commit()
         flash("Profile updated!", 'success')
         return redirect(url_for('profile'))
+
     return render_template("edit_profile.html", user=user)
 
 @app.route('/projects')
@@ -131,4 +151,5 @@ def internal_server_error(e):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+        print("✅ Database initialized.")
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
